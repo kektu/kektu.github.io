@@ -221,7 +221,7 @@
     var OMDB_CACHE = 'maxsm_ratings_plugin_omdb';
     var KP_CACHE = 'maxsm_ratings_plugin_kp';
     var ID_MAPPING_CACHE = 'maxsm_ratings_plugin_id_mapping';
-    var OMDB_API_KEYS = (window.0d4787ec379c41814d3bc2fed7c14248 && window.RATINGS_PLUGIN_TOKENS.OMDB_API_KEYS) || [];
+    var OMDB_API_KEYS = (window.0d4787ec379c41814d3bc2fed7c14248 && window.0d4787ec379c41814d3bc2fed7c14248) || [];
     var KP_API_KEYS   = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.KP_API_KEYS)   || [];
     
     var PROXY_LIST = [
