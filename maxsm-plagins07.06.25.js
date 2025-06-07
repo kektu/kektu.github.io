@@ -230,8 +230,8 @@
     var OMDB_CACHE = 'maxsm_ratings_plugin_omdb';
     var KP_CACHE = 'maxsm_ratings_plugin_kp';
     var ID_MAPPING_CACHE = 'maxsm_ratings_plugin_id_mapping';
-    var OMDB_API_KEYS = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.OMDB_API_KEYS) || ['YOU_KEY'];
-    var KP_API_KEYS   = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.KP_API_KEYS)   || ['YOU_KEY'];
+    var OMDB_API_KEYS = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.OMDB_API_KEYS) || ['c4fe9fcf'];
+    var KP_API_KEYS   = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.KP_API_KEYS)   || ['cc0875d7-b351-46bb-b97f-56787d2ea25d'];
     var PROXY_TIMEOUT = 5000; // 5 секунд таймаут для каждого прокси
     var PROXY_LIST = [
         'https://api.allorigins.win/raw?url=',  
