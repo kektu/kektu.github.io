@@ -11,8 +11,8 @@
 Можно использовать одиночный ключ или массив ключей, после получения API ключей передайте их как массивы через:
     window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.OMDB_API_KEYS
 Или просто введите ниже в коде плагина:
-    var OMDB_API_KEYS = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.OMDB_API_KEYS) || ['YOU_KEY']; // api ключи массивом
-    var KP_API_KEYS   = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.KP_API_KEYS)   || ['YOU_KEY']; // api ключи массивом
+    var OMDB_API_KEYS = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.OMDB_API_KEYS) || ['c4fe9fcf']; // api ключи массивом
+    var KP_API_KEYS   = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.KP_API_KEYS)   || ['cc0875d7-b351-46bb-b97f-56787d2ea25d']; // api ключи массивом
 
 Для получения данных о качестве используется jacred парсер, по умолчанию плагин настроен на получение адреса и ключа вашего введеного jacred,
 вы можете изменить это в переменных:
@@ -2414,5 +2414,6 @@
         startPlugin();
 
 })();
+
 
 
