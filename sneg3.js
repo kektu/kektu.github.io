@@ -7,8 +7,12 @@
   var KEY_ENABLED = 'snowfx_enabled';
   var KEY_DENSITY = 'snowfx_density'; // 0 auto, 1 low, 2 mid, 3 high
   var KEY_SETTLE  = 'snowfx_settle';  // 0 off, 1 on
+  var KEY_SIZE    = 'snowfx_flake_size'; // 0 auto, 1 small, 2 medium, 3 large, 4 huge
+  var KEY_SETTLE_SPEED = 'snowfx_settle_speed'; // 0 auto, 1 slow, 2 medium, 3 fast
+  var KEY_FALL_SPEED = 'snowfx_fall_speed'; // 0 auto, 1 slow, 2 medium, 3 fast
   var KEY_SHAKE   = 'snowfx_shake';   // 0 off, 1 on (shake to clear on mobile)
   var KEY_FLAKE   = 'snowfx_flake_style'; // 0 auto, 1 dots, 2 flakes, 3 mixed
+  var KEY_IN_CARD = 'snowfx_in_card'; // 0 off, 1 on (details/card screen)
   // Menu icon (filled), behaves like native icons (color inherits from menu item)
   var SNOW_ICON =
     '<svg class="snowfx-menu-icon" width="88" height="83" viewBox="0 0 88 83" xmlns="http://www.w3.org/2000/svg">' +
@@ -107,9 +111,7 @@ function isElVisible(el) {
     '.modal',
     '.dialog',
     '.selectbox',
-    '.notification',
-    '[class*="overlay"]'
-  ];
+    '.notification'];
 
   function intersectsEnough(r) {
     // считаем площадь пересечения с вьюпортом
@@ -174,15 +176,73 @@ function isElVisible(el) {
     genre: 1, genres: 1
   };
 
+  // --- activity name for details/card screen ---
+  // В разных сборках Lampa карточка фильма/сериала может иметь component: "full" (чаще всего),
+  // либо другие варианты. Держим отдельный список, чтобы корректно включать снег по опции.
+  var DETAILS_COMPONENTS = {
+    full: 1,
+    details: 1,
+    detail: 1,
+    card: 1,
+    info: 1
+  };
+
+  function isDetailsActivity(e) {
+    var c = (e && (e.component || (e.object && e.object.component))) || '';
+    return !!DETAILS_COMPONENTS[c];
+  }
+
+
   function isAllowedActivity(e) {
     var c = (e && (e.component || (e.object && e.object.component))) || '';
     return !!ALLOWED_COMPONENTS[c];
+  }
+
+  // --- details/card screen detect (страница карточки фильма/сериала) ---
+  function isDetailsScreen() {
+    try {
+      // Карточка фильма/сериала (детали). Классы могут немного отличаться между версиями/темами,
+      // поэтому проверяем несколько устойчивых элементов "шапки" и блока действий.
+      return !!document.querySelector(
+        '.full, .full-start, .full-start__poster, .full-start__title,' +
+        ' .full-start__head, .full-start__body, .full-start__buttons, .full-start__actions,' +
+        ' .full__body, .full__head, .full__left, .full__right,' +
+        ' .full__poster, .full__title, .full__buttons, .full__actions,' +
+        ' .full__descr, .full__tagline, .full__info, .full__meta'
+      );
+    } catch (e) {
+      return false;
+    }
   }
 
   // --- state from Lampa ---
   var on_allowed_screen = true; // если нет событий — считаем "разрешённый экран"
   var in_player = false;
   var overlay_open = false;
+  var in_details_activity = false;
+
+  // Реальное определение плеера (фоллбек, когда события start/destroy не приходят)
+  function detectActuallyInPlayer() {
+    // HTML5 video (внутренний плеер)
+    try {
+      var vids = document.getElementsByTagName('video');
+      for (var i = 0; i < vids.length; i++) {
+        var v = vids[i];
+        if (!v) continue;
+        if (typeof v.paused === 'boolean') {
+          if (!v.paused && !v.ended) return true;
+        }
+      }
+    } catch (e1) {}
+
+    // контейнеры плеера (на разных платформах/сборках)
+    try {
+      var el = document.querySelector('.player, .player__content, .player__video, .player__layer, .player-layer, .video-player');
+      if (el && isElVisible(el)) return true;
+    } catch (e2) {}
+
+    return false;
+  }
 
   // --- config ---
   function getTargetByDensity(density, platform) {
@@ -208,6 +268,56 @@ function isElVisible(el) {
     return 120;
   }
 
+  // Размер снежинок (независимо от вида)
+  // На Tizen "Авто" чуть меньше для снижения нагрузки.
+  function getSizeMult(size, platform) {
+    // 0 auto, 1 small, 2 medium, 3 large, 4 huge
+    if (platform === 'tizen') {
+      // На ТВ лучше не раздувать спрайты
+      if (size === 0) return 0.85;
+      if (size === 1) return 0.75;
+      if (size === 2) return 0.90;
+      // large/huge принудительно ограничиваем
+      return 0.95;
+    }
+
+    if (size === 1) return 0.75;
+    if (size === 2) return 1.00;
+    if (size === 3) return 1.30;
+    if (size === 4) return 1.60;
+    return 1.00;
+  }
+
+  // Скорость оседания (интенсивность накопления)
+  // 0 auto, 1 slow, 2 medium, 3 fast
+  function getSettleIntensity(speed, platform) {
+    // На Tizen оседание всё равно выключено, но пусть будет безопасное значение
+    if (platform === 'tizen') return 0.0;
+    if (speed === 1) return 0.60;
+    if (speed === 2) return 1.00;
+    if (speed === 3) return 1.55;
+    // auto
+    return 1.00;
+  }
+
+
+  // Скорость падения снежинок (умножитель скорости vy)
+  // 0 auto, 1 slow, 2 medium, 3 fast
+  function getFallSpeedMult(speed, platform) {
+    // Скорость почти не влияет на нагрузку, но на ТВ избегаем слишком "быстрого" эффекта
+    if (platform === 'tizen') {
+      if (speed === 1) return 0.75;
+      if (speed === 2) return 0.95;
+      if (speed === 3) return 1.10;
+      return 0.95; // auto
+    }
+
+    if (speed === 1) return 0.75;
+    if (speed === 2) return 1.00;
+    if (speed === 3) return 1.35;
+    return 1.00; // auto
+  }
+
   function computeConfig() {
     var tizen = isTizen();
     var android = isAndroid();
@@ -227,7 +337,7 @@ function isElVisible(el) {
     if (flake_style < 0) flake_style = 0;
     if (flake_style > 3) flake_style = 3;
     if (tizen && flake_style === 0) flake_style = 1;
-var platform = tizen ? 'tizen' : (android ? 'android' : (desktop ? 'desktop' : 'other'));
+    var platform = tizen ? 'tizen' : (android ? 'android' : (desktop ? 'desktop' : 'other'));
     var flakesCount = getTargetByDensity(density, platform);
 
     var fps = tizen ? 22 : (android ? 50 : 60);
@@ -238,12 +348,44 @@ var platform = tizen ? 'tizen' : (android ? 'android' : (desktop ? 'desktop' : '
       flakesCount = Math.min(flakesCount, 28);
     }
 
+    // Снег в карточке (детали)
+    var inCardDefault = 0;
+    var in_card = num(storageGet(KEY_IN_CARD, inCardDefault), inCardDefault) ? 1 : 0;
+
+    // Размер снежинок
+    var sizeDefault = 0;
+    var flake_size = num(storageGet(KEY_SIZE, sizeDefault), sizeDefault) | 0;
+    if (flake_size < 0) flake_size = 0;
+    if (flake_size > 4) flake_size = 4;
+
+    // Скорость оседания
+    var settleSpeedDefault = 0;
+    var settle_speed = num(storageGet(KEY_SETTLE_SPEED, settleSpeedDefault), settleSpeedDefault) | 0;
+    if (settle_speed < 0) settle_speed = 0;
+    if (settle_speed > 3) settle_speed = 3;
+    // Скорость падения снежинок
+    var fallSpeedDefault = 0;
+    var fall_speed = num(storageGet(KEY_FALL_SPEED, fallSpeedDefault), fallSpeedDefault) | 0;
+    if (fall_speed < 0) fall_speed = 0;
+    if (fall_speed > 3) fall_speed = 3;
+
+
+    // На Tizen принудительно ограничиваем тяжёлые варианты размера
+    if (tizen && flake_size >= 3) flake_size = 2;
+
     return {
       tizen: tizen,
       flakes: flakesCount,
       fps: fps,
       settle: settle,
-      flake_style: flake_style
+      flake_style: flake_style,
+      in_card: in_card,
+      flake_size: flake_size,
+      settle_speed: settle_speed,
+      fall_speed: fall_speed,
+      size_mult: getSizeMult(flake_size, platform),
+      fall_mult: getFallSpeedMult(fall_speed, platform),
+      settle_intensity: getSettleIntensity(settle_speed, platform)
     };
   }
 
@@ -252,6 +394,15 @@ var platform = tizen ? 'tizen' : (android ? 'android' : (desktop ? 'desktop' : '
     if (!enabled) return false;
     if (in_player) return false;
     if (overlay_open) return false;      // ключевой фикс: не перекрывать настройки
+
+    // карточка фильма/сериала (детали)
+    // В некоторых сборках карточка приходит как "неразрешённая activity",
+    // поэтому для неё делаем отдельное правило:
+    // - если в настройках включено "Снег в карточке" → показываем
+    // - если выключено → не показываем
+    var details = in_details_activity || isDetailsScreen();
+    if (details) return !!cfg_in_card;
+
     if (!on_allowed_screen) return false;
     return true;
   }
@@ -274,7 +425,12 @@ var platform = tizen ? 'tizen' : (android ? 'android' : (desktop ? 'desktop' : '
   var cfg_fps = 30;
   var cfg_flakes = 80;
   var cfg_settle = 0;
+  var cfg_settle_user = 0; // user setting (before runtime overrides)
   var cfg_flake_style = 0;
+  var cfg_in_card = 0;
+  var cfg_size_mult = 1.0;
+  var cfg_fall_mult = 1.0;
+  var cfg_settle_intensity = 1.0;
 
   // settle surfaces
   var surfaces = [];
@@ -288,6 +444,16 @@ function stopFade() {
   fadeRaf = 0;
 }
 
+// очистка накопленного снега/таймеров (используем при выключении оседания, например в карточке)
+function clearAccumulationRuntime(reason) {
+  stopFade();
+  try { if (surfTimer) { clearTimeout(surfTimer); surfTimer = 0; } } catch (e1) {}
+  try { if (resetTimer) { clearTimeout(resetTimer); resetTimer = 0; } } catch (e2) {}
+  surfaces = [];
+  try { if (accCtx) accCtx.clearRect(0, 0, W, H); } catch (e3) {}
+  try { stopCaps(); } catch (e4) {}
+}
+
 // мгновенный сброс (для resize/смены экранов/настроек)
 function resetAccumulationHard(reason) {
   if (cfg_tizen || !cfg_settle) return;
@@ -296,7 +462,7 @@ function resetAccumulationHard(reason) {
   stopFade();
 
     // если эффект выключен — не слушаем датчики
-    stopMotion();
+    if (!running || !shake_enabled) stopMotion();
 
   try { accCtx.clearRect(0, 0, W, H); } catch (e) {}
   surfaces = [];
@@ -499,6 +665,9 @@ function resetAccumulationSoft(reason) {
     lastTs = 0;
 
     stopCaps();
+
+    // экономим батарею на мобилках
+    stopMotion();
   }
 
   function resize() {
@@ -549,7 +718,13 @@ function resetAccumulationSoft(reason) {
     }
 
     // размер: точки мелкие, снежинки крупнее (чуть увеличили)
+    // + пользовательский множитель размера (независимо от вида)
     var r = fancy ? rand(2.7, 6.6) : rand(1.0, 2.7);
+    r = r * (cfg_size_mult || 1);
+    // защита от слишком больших значений
+    if (r < 0.6) r = 0.6;
+    if (!cfg_tizen && r > 12) r = 12;
+    if (cfg_tizen && r > 5.2) r = 5.2;
 
     // большие снежинки падают чуть медленнее
     var vy1 = cfg_tizen ? 0.45 : (fancy ? 0.22 : 0.55);
@@ -560,7 +735,7 @@ function resetAccumulationSoft(reason) {
       x: rand(0, W),
       y: rand(-H, 0),
       r: r,
-      vy: rand(vy1, vy2),
+      vy: rand(vy1, vy2) * (cfg_fall_mult || 1),
       vx: rand(cfg_tizen ? -0.20 : -0.30, cfg_tizen ? 0.20 : 0.30),
       a: rand(0.35, 0.95)
     };
@@ -657,6 +832,9 @@ function resetAccumulationSoft(reason) {
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       var r = null;
+
+      // только реально видимые карточки (важно для горизонтальных каруселей и скрытых списков)
+      if (!isElVisible(el)) continue;
 
       try { r = el.getBoundingClientRect(); } catch (e) { r = null; }
       if (!r) continue;
@@ -803,9 +981,23 @@ function resetAccumulationSoft(reason) {
 
       // --- оседание ---
       if (cfg_settle && !cfg_tizen && accCtx && spriteDot) {
+        var si = (cfg_settle_intensity || 1);
+        if (si < 0) si = 0;
+        // для "медленного" оседания просто не всегда рисуем накопление
+        function allowDeposit() {
+          if (si >= 0.999) return true;
+          return Math.random() < si;
+        }
+        function p(base, cap) {
+          if (!cap) cap = 0.95;
+          return Math.min(cap, base * si);
+        }
         // низ экрана
         if (f.y >= H - 8) {
-          drawAccDot(f.x, H - 10, f.r, Math.min(0.9, f.a + 0.1));
+          if (allowDeposit()) {
+            drawAccDot(f.x, H - 10, f.r, Math.min(0.9, f.a + 0.1));
+            if (Math.random() < p(0.18, 0.55)) drawAccDot(f.x + rand(-4, 4), H - 10, f.r * 0.85, Math.min(0.85, f.a + 0.05));
+          }
           f.x = rand(0, W);
           f.y = rand(-H, 0);
           continue;
@@ -818,9 +1010,15 @@ function resetAccumulationSoft(reason) {
             if (f.x < s.x1 || f.x > s.x2) continue;
 
             if (f.y >= s.y && f.y <= s.y + 3) {
-              drawAccDot(f.x, s.y - 1, f.r, Math.min(0.9, f.a + 0.15));
-              if (Math.random() < 0.55) drawAccDot(f.x + rand(-4, 4), s.y - 1, f.r * 0.85, Math.min(0.8, f.a));
-              if (Math.random() < 0.30) drawAccDot(f.x + rand(-6, 6), s.y - 2, f.r * 0.75, Math.min(0.7, f.a));
+              if (allowDeposit()) {
+                drawAccDot(f.x, s.y - 1, f.r, Math.min(0.9, f.a + 0.15));
+                if (Math.random() < p(0.55)) drawAccDot(f.x + rand(-4, 4), s.y - 1, f.r * 0.85, Math.min(0.8, f.a));
+                if (Math.random() < p(0.30, 0.85)) drawAccDot(f.x + rand(-6, 6), s.y - 2, f.r * 0.75, Math.min(0.7, f.a));
+                // ускоренное оседание: иногда добавим ещё точку
+                if (si > 1.25 && Math.random() < Math.min(0.25, (si - 1.0) * 0.18)) {
+                  drawAccDot(f.x + rand(-7, 7), s.y - 2, f.r * 0.65, Math.min(0.65, f.a));
+                }
+              }
 
               f.x = rand(0, W);
               f.y = rand(-H, 0);
@@ -887,6 +1085,10 @@ function resetAccumulationSoft(reason) {
     }
 
     running = true;
+
+    // включаем "стряхивание" при фактическом старте эффекта
+    if (shake_enabled) ensureMotion();
+
     rafId = requestAnimationFrame(loop);
   }
 
@@ -978,20 +1180,38 @@ function resetAccumulationSoft(reason) {
     } catch (e) {}
   }
 
-
-    // --- Shake to clear snow (mobile) ---
+  // --- Shake to clear snow (mobile) ---
   // Работает через devicemotion. На iOS может требоваться разрешение (первый тап/клик).
+  // Важно: запускаем/останавливаем слушатель вместе с запуском/остановкой эффекта, иначе после закрытия настроек
+  // (когда снег временно выключен из-за overlay) "стряхивание" может не включиться обратно.
   var shake_enabled = 0;
+
   var motion_active = false;
   var motion_ready = false;
   var motion_ask_bound = false;
 
+  // last motion sample (для расчёта рывка)
+  var last_mot_x = null;
+  var last_mot_y = null;
+  var last_mot_z = null;
+  var last_mot_ts = 0;
+
+  // анти-спам для триггера
   var last_shake_ts = 0;
   var shake_hits = 0;
   var shake_window_ts = 0;
 
   function setShakeEnabled(v) {
     v = v ? 1 : 0;
+
+    // если значение не менялось — просто синхронизируем состояние слушателя с running
+    if (shake_enabled === v) {
+      if (!shake_enabled) { stopMotion(); return; }
+      if (cfg_tizen || !isMobileUA()) { stopMotion(); return; }
+      if (running) ensureMotion(); else stopMotion();
+      return;
+    }
+
     shake_enabled = v;
 
     if (!shake_enabled) {
@@ -1000,11 +1220,50 @@ function resetAccumulationSoft(reason) {
     }
 
     // только мобилки, не Tizen
-    if (cfg_tizen || !isMobileUA()) return;
+    if (cfg_tizen || !isMobileUA()) {
+      stopMotion();
+      return;
+    }
 
     // запускаем только когда эффект реально активен
     if (running) ensureMotion();
     else stopMotion();
+  }
+
+  function normalizeAccel(ax, ay, az) {
+    // Некоторые WebView/браузеры отдают ускорение в "g", некоторые в m/s^2.
+    // Если значения очень маленькие (обычно <= ~3), считаем что это g и переводим в m/s^2.
+    var mx = Math.max(Math.abs(ax), Math.abs(ay), Math.abs(az));
+    if (mx > 0 && mx <= 3.5) {
+      ax *= 9.81; ay *= 9.81; az *= 9.81;
+    }
+    return { x: ax, y: ay, z: az };
+  }
+
+  function doShakeEffect() {
+    // очищаем "осевший" снег даже если оседание временно выключено (например, в карточке)
+    try { clearAccumulationRuntime('shake'); } catch (e1) {}
+
+    // если оседание включено — перестроим поверхности чуть позже
+    if (!cfg_tizen && cfg_settle) {
+      try {
+        if (resetTimer) clearTimeout(resetTimer);
+        resetTimer = setTimeout(function () {
+          resetTimer = 0;
+          buildSurfaces();
+        }, 180);
+      } catch (e2) {}
+    }
+
+    // порыв ветра у падающего снега (чтобы было видно, что встряхивание сработало даже без оседания)
+    try {
+      for (var i = 0; i < flakes.length; i++) {
+        flakes[i].vx += rand(-1.6, 1.6);
+        flakes[i].vy *= 0.80;
+        // немного "подбросим" часть снежинок вверх
+        if (Math.random() < 0.35) flakes[i].y = rand(-H * 0.35, 0);
+      }
+    } catch (e3) {}
   }
 
   function onDeviceMotion(e) {
@@ -1018,19 +1277,42 @@ function resetAccumulationSoft(reason) {
     var acc = e && (e.accelerationIncludingGravity || e.acceleration);
     if (!acc) return;
 
-    var ax = Math.abs(acc.x || 0);
-    var ay = Math.abs(acc.y || 0);
-    var az = Math.abs(acc.z || 0);
+    var ax = Number(acc.x || 0);
+    var ay = Number(acc.y || 0);
+    var az = Number(acc.z || 0);
 
-    // дельта ускорений (очень грубо, но быстро и стабильно)
-    var delta = ax + ay + az;
+    var n = normalizeAccel(ax, ay, az);
+    ax = n.x; ay = n.y; az = n.z;
 
     var now = Date.now();
-    var TH = 25.0;          // порог (м/с^2)
-    var WINDOW = 450;       // окно детекции
-    var COOLDOWN = 1100;    // антиспам
+    if (!last_mot_ts) {
+      last_mot_ts = now;
+      last_mot_x = ax; last_mot_y = ay; last_mot_z = az;
+      return;
+    }
 
-    if (delta > TH) {
+    // если между событиями был большой разрыв — сбрасываем baseline
+    if (now - last_mot_ts > 1200) {
+      last_mot_ts = now;
+      last_mot_x = ax; last_mot_y = ay; last_mot_z = az;
+      return;
+    }
+
+    // оценка "рывка": сумма модулей дельт по осям (гравитация частично компенсируется разностью)
+    var jerk = Math.abs(ax - last_mot_x) + Math.abs(ay - last_mot_y) + Math.abs(az - last_mot_z);
+
+    last_mot_ts = now;
+    last_mot_x = ax; last_mot_y = ay; last_mot_z = az;
+
+    // пороги: iOS часто даёт чуть "мягче" значения → порог выше не нужен
+    var ua = navigator.userAgent || '';
+    var isiOS = /iPhone|iPad|iPod/i.test(ua);
+
+    var TH = isiOS ? 12.5 : 11.0;   // порог рывка (m/s^2)
+    var WINDOW = 650;              // окно детекции
+    var COOLDOWN = 1100;           // антиспам
+
+    if (jerk > TH) {
       if (now - last_shake_ts < COOLDOWN) return;
 
       if (!shake_window_ts || (now - shake_window_ts) > WINDOW) {
@@ -1040,21 +1322,13 @@ function resetAccumulationSoft(reason) {
 
       shake_hits++;
 
+      // требуем 2 сильных рывка в окне — так меньше ложных срабатываний
       if (shake_hits >= 2) {
         last_shake_ts = now;
         shake_hits = 0;
         shake_window_ts = 0;
 
-        // "стряхиваем" оседание (мгновенно), без полос
-        resetAccumulationHard('shake');
-
-        // небольшой "порыв ветра" у падающего снега
-        try {
-          for (var i = 0; i < flakes.length; i++) {
-            flakes[i].vx += rand(-1.2, 1.2);
-            flakes[i].vy *= 0.75;
-          }
-        } catch (e2) {}
+        doShakeEffect();
       }
     }
   }
@@ -1064,20 +1338,28 @@ function resetAccumulationSoft(reason) {
     if (typeof window.DeviceMotionEvent === 'undefined') return;
 
     try {
-      window.addEventListener('devicemotion', onDeviceMotion, false);
+      // passive снижает влияние на scroll
+      window.addEventListener('devicemotion', onDeviceMotion, { passive: true });
       motion_active = true;
-    } catch (e) {}
+    } catch (e) {
+      try {
+        window.addEventListener('devicemotion', onDeviceMotion, false);
+        motion_active = true;
+      } catch (e2) {}
+    }
   }
 
   function stopMotion() {
     if (!motion_active) return;
-    try { window.removeEventListener('devicemotion', onDeviceMotion, false); } catch (e) {}
+    try { window.removeEventListener('devicemotion', onDeviceMotion, { passive: true }); } catch (e) {}
+    try { window.removeEventListener('devicemotion', onDeviceMotion, false); } catch (e2) {}
     motion_active = false;
   }
 
   function ensureMotion() {
-    if (motion_ready) { startMotion(); return; }
     if (!shake_enabled) return;
+
+    if (motion_ready) { startMotion(); return; }
 
     // iOS 13+ требует запрос разрешения только по пользовательскому действию
     if (typeof window.DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -1109,15 +1391,214 @@ function resetAccumulationSoft(reason) {
     startMotion();
   }
 
+  // --- i18n (Settings labels) ---
+
+  function snowfx_detect_lang() {
+    var l = '';
+    try {
+      if (window.Lampa && Lampa.Storage) {
+        if (typeof Lampa.Storage.lang === 'function') l = Lampa.Storage.lang();
+        else if (typeof Lampa.Storage.get === 'function') l = Lampa.Storage.get('language') || Lampa.Storage.get('lang') || Lampa.Storage.get('locale');
+      }
+    } catch (e) {}
+
+    if (!l) {
+      try { l = (navigator.language || navigator.userLanguage || '').toLowerCase(); } catch (e2) {}
+    }
+
+    l = (l || 'ru').toString().toLowerCase();
+    if (l.indexOf('en') === 0) return 'en';
+    if (l.indexOf('uk') === 0 || l.indexOf('ua') === 0) return 'uk';
+    if (l.indexOf('ru') === 0) return 'ru';
+    return 'ru';
+  }
+
+  var SNOWFX_LANG = snowfx_detect_lang();
+  var SNOWFX_I18N = {
+    ru: {
+      component: 'Снег',
+
+      enabled_name: 'Снег на экранах',
+      enabled_desc: 'Главная / Фильмы / Сериалы / Категории',
+
+      in_card_name: 'Снег в карточке',
+      in_card_desc: 'Показывать снег на странице деталей фильма/сериала',
+
+      density_name: 'Плотность снега',
+      density_desc: 'На Tizen плотность ограничена',
+
+      flake_name: 'Тип снежинок',
+      flake_desc: 'Выбор вида снежинок. На Tizen можно включить снежинки, но возможны лаги.',
+
+      size_name: 'Размер снежинок',
+      size_desc: 'Применяется ко всем видам. На Tizen большие размеры ограничены для снижения нагрузки.',
+
+      fall_speed_name: 'Скорость падения',
+      fall_speed_desc: 'Скорость движения падающих снежинок. На Tizen быстрый режим ограничен.',
+
+      settle_name: 'Оседание на карточках',
+      settle_desc: 'При прокрутке оседание сбрасывается. На Tizen принудительно Выкл.',
+
+      settle_speed_name: 'Скорость оседания',
+      settle_speed_desc: 'Скорость накопления "снежных точек" (работает только если оседание включено).',
+
+      shake_name: 'Стряхивание снега',
+      shake_desc: 'На смартфоне можно стряхнуть снег потряхиванием',
+
+      on: 'Вкл',
+      off: 'Выкл',
+      yes: 'Да',
+      no: 'Нет',
+      auto: 'Авто',
+
+      density_low: 'Мало',
+      density_mid: 'Средне',
+      density_high: 'Много',
+
+      style_dots: 'Точки',
+      style_flakes: 'Снежинки',
+      style_mixed: 'Смешанные',
+
+      size_small: 'Маленькие',
+      size_medium: 'Средние',
+      size_large: 'Большие',
+      size_huge: 'Огромные',
+
+      speed_slow: 'Медленная',
+      speed_medium: 'Средняя',
+      speed_fast: 'Быстрая'
+    },
+
+    en: {
+      component: 'Snow',
+
+      enabled_name: 'Snow on screens',
+      enabled_desc: 'Home / Movies / Series / Categories',
+
+      in_card_name: 'Snow inside cards',
+      in_card_desc: 'Show snow on the details page',
+
+      density_name: 'Snow density',
+      density_desc: 'On Tizen, density is limited',
+
+      flake_name: 'Flake type',
+      flake_desc: 'Choose the flake style. On Tizen, flakes may cause stutter.',
+
+      size_name: 'Flake size',
+      size_desc: 'Applies to all styles. On Tizen, large sizes are limited to reduce load.',
+
+      fall_speed_name: 'Fall speed',
+      fall_speed_desc: 'Speed of falling flakes. On Tizen, fast mode is limited.',
+
+      settle_name: 'Settle on cards',
+      settle_desc: 'Settling resets while scrolling. Forced Off on Tizen.',
+
+      settle_speed_name: 'Settle speed',
+      settle_speed_desc: 'How fast settled "snow dots" accumulate (works only when settling is enabled).',
+
+      shake_name: 'Shake to clear',
+      shake_desc: 'On mobile you can shake to clear snow',
+
+      on: 'On',
+      off: 'Off',
+      yes: 'Yes',
+      no: 'No',
+      auto: 'Auto',
+
+      density_low: 'Low',
+      density_mid: 'Medium',
+      density_high: 'High',
+
+      style_dots: 'Dots',
+      style_flakes: 'Flakes',
+      style_mixed: 'Mixed',
+
+      size_small: 'Small',
+      size_medium: 'Medium',
+      size_large: 'Large',
+      size_huge: 'Huge',
+
+      speed_slow: 'Slow',
+      speed_medium: 'Medium',
+      speed_fast: 'Fast'
+    },
+
+    uk: {
+      component: 'Сніг',
+
+      enabled_name: 'Сніг на екранах',
+      enabled_desc: 'Головна / Фільми / Серіали / Категорії',
+
+      in_card_name: 'Сніг у картці',
+      in_card_desc: 'Показувати сніг на сторінці деталей фільму/серіалу',
+
+      density_name: 'Щільність снігу',
+      density_desc: 'На Tizen щільність обмежена',
+
+      flake_name: 'Тип сніжинок',
+      flake_desc: 'Вибір виду сніжинок. На Tizen можливі підгальмовування.',
+
+      size_name: 'Розмір сніжинок',
+      size_desc: 'Застосовується до всіх видів. На Tizen великі розміри обмежені для зниження навантаження.',
+
+      fall_speed_name: 'Швидкість падіння',
+      fall_speed_desc: 'Швидкість руху падаючих сніжинок. На Tizen швидкий режим обмежено.',
+
+      settle_name: 'Осідання на картках',
+      settle_desc: 'Під час прокрутки осідання скидається. На Tizen примусово Вимк.',
+
+      settle_speed_name: 'Швидкість осідання',
+      settle_speed_desc: 'Швидкість накопичення "снігових точок" (працює лише якщо осідання увімкнено).',
+
+      shake_name: 'Струсити сніг',
+      shake_desc: 'На смартфоні можна струсити сніг потряхуванням',
+
+      on: 'Увімк',
+      off: 'Вимк',
+      yes: 'Так',
+      no: 'Ні',
+      auto: 'Авто',
+
+      density_low: 'Мало',
+      density_mid: 'Середньо',
+      density_high: 'Багато',
+
+      style_dots: 'Точки',
+      style_flakes: 'Сніжинки',
+      style_mixed: 'Змішані',
+
+      size_small: 'Малі',
+      size_medium: 'Середні',
+      size_large: 'Великі',
+      size_huge: 'Величезні',
+
+      speed_slow: 'Повільна',
+      speed_medium: 'Середня',
+      speed_fast: 'Швидка'
+    }
+  };
+
+  function snowfx_t(key) {
+    var dict = SNOWFX_I18N[SNOWFX_LANG] || SNOWFX_I18N.ru;
+    return (dict && dict[key]) || (SNOWFX_I18N.ru && SNOWFX_I18N.ru[key]) || key;
+  }
+
 // --- Settings UI ---
   function addSettingsUI() {
     injectSnowIconCSS();
     if (!window.Lampa || !Lampa.SettingsApi) return;
 
+    var onoff = { 0: snowfx_t('off'), 1: snowfx_t('on') };
+    var yesno = { 0: snowfx_t('no'), 1: snowfx_t('yes') };
+    var density_vals = { 0: snowfx_t('auto'), 1: snowfx_t('density_low'), 2: snowfx_t('density_mid'), 3: snowfx_t('density_high') };
+    var style_vals = { 0: snowfx_t('auto'), 1: snowfx_t('style_dots'), 2: snowfx_t('style_flakes'), 3: snowfx_t('style_mixed') };
+    var size_vals = { 0: snowfx_t('auto'), 1: snowfx_t('size_small'), 2: snowfx_t('size_medium'), 3: snowfx_t('size_large'), 4: snowfx_t('size_huge') };
+    var speed_vals = { 0: snowfx_t('auto'), 1: snowfx_t('speed_slow'), 2: snowfx_t('speed_medium'), 3: snowfx_t('speed_fast') };
+
     try {
       Lampa.SettingsApi.addComponent({
         component: 'snowfx',
-        name: 'Снег',
+        name: snowfx_t('component'),
         icon: SNOW_ICON
       });
 
@@ -1126,12 +1607,26 @@ function resetAccumulationSoft(reason) {
         param: {
           name: KEY_ENABLED,
           type: 'select',
-          values: { 0: 'Выкл', 1: 'Вкл' },
+          values: onoff,
           "default": 1
         },
         field: {
-          name: 'Снег на экранах',
-          description: 'Главная / Фильмы / Сериалы / Категории'
+          name: snowfx_t('enabled_name'),
+          description: snowfx_t('enabled_desc')
+        }
+      });
+
+      Lampa.SettingsApi.addParam({
+        component: 'snowfx',
+        param: {
+          name: KEY_IN_CARD,
+          type: 'select',
+          values: yesno,
+          "default": 0
+        },
+        field: {
+          name: snowfx_t('in_card_name'),
+          description: snowfx_t('in_card_desc')
         }
       });
 
@@ -1140,12 +1635,12 @@ function resetAccumulationSoft(reason) {
         param: {
           name: KEY_DENSITY,
           type: 'select',
-          values: { 0: 'Авто', 1: 'Мало', 2: 'Средне', 3: 'Много' },
+          values: density_vals,
           "default": 0
         },
         field: {
-          name: 'Плотность снега',
-          description: 'На Tizen плотность ограничена'
+          name: snowfx_t('density_name'),
+          description: snowfx_t('density_desc')
         }
       });
 
@@ -1154,12 +1649,41 @@ function resetAccumulationSoft(reason) {
         param: {
           name: KEY_FLAKE,
           type: 'select',
-          values: { 0: 'Авто', 1: 'Точки', 2: 'Снежинки', 3: 'Смешанные' },
+          values: style_vals,
           "default": 0
         },
         field: {
-          name: 'Тип снежинок',
-          description: 'Выбор вида снежинок. На Tizen можно включить снежинки, но возможны лаги.'}
+          name: snowfx_t('flake_name'),
+          description: snowfx_t('flake_desc')
+        }
+      });
+
+      Lampa.SettingsApi.addParam({
+        component: 'snowfx',
+        param: {
+          name: KEY_SIZE,
+          type: 'select',
+          values: size_vals,
+          "default": 0
+        },
+        field: {
+          name: snowfx_t('size_name'),
+          description: snowfx_t('size_desc')
+        }
+      });
+
+      Lampa.SettingsApi.addParam({
+        component: 'snowfx',
+        param: {
+          name: KEY_FALL_SPEED,
+          type: 'select',
+          values: speed_vals,
+          "default": 0
+        },
+        field: {
+          name: snowfx_t('fall_speed_name'),
+          description: snowfx_t('fall_speed_desc')
+        }
       });
 
       Lampa.SettingsApi.addParam({
@@ -1167,28 +1691,40 @@ function resetAccumulationSoft(reason) {
         param: {
           name: KEY_SETTLE,
           type: 'select',
-          values: { 0: 'Выкл', 1: 'Вкл' },
+          values: onoff,
           "default": 1
         },
         field: {
-          name: 'Оседание на карточках',
-          description: 'При прокрутке оседание сбрасывается. На Tizen принудительно Выкл.'
+          name: snowfx_t('settle_name'),
+          description: snowfx_t('settle_desc')
         }
       });
 
+      Lampa.SettingsApi.addParam({
+        component: 'snowfx',
+        param: {
+          name: KEY_SETTLE_SPEED,
+          type: 'select',
+          values: speed_vals,
+          "default": 0
+        },
+        field: {
+          name: snowfx_t('settle_speed_name'),
+          description: snowfx_t('settle_speed_desc')
+        }
+      });
 
-      // Стряхивание на телефоне (акселерометр)
       Lampa.SettingsApi.addParam({
         component: 'snowfx',
         param: {
           name: KEY_SHAKE,
           type: 'select',
-          values: { 0: 'Выкл', 1: 'Вкл' },
+          values: onoff,
           "default": 1
         },
         field: {
-          name: 'Стряхивание снега',
-          description: 'На смартфоне можно стряхнуть снег потряхиванием'
+          name: snowfx_t('shake_name'),
+          description: snowfx_t('shake_desc')
         }
       });
     } catch (e) {}
@@ -1202,9 +1738,21 @@ function resetAccumulationSoft(reason) {
       if (Lampa.Listener && Lampa.Listener.follow) {
         Lampa.Listener.follow('activity', function (e) {
           if (!e || e.type !== 'start') return;
-          on_allowed_screen = isAllowedActivity(e);
-          setShakeEnabled(!!sh);
-        applyConfigAndState(true);
+          in_details_activity = isDetailsActivity(e);
+          on_allowed_screen = isAllowedActivity(e) || in_details_activity;
+
+          // сброс пробника скролла при смене экрана
+          try { probeEl = null; probeTop = null; } catch (e0) {}
+
+          applyConfigAndState(true);
+
+          // обновим shake сразу, без ожидания watcher
+          try {
+            var t = isTizen();
+            var sd = (!t && isMobileUA()) ? 1 : 0;
+            var shv = num(storageGet(KEY_SHAKE, sd), sd) | 0;
+            setShakeEnabled(!!shv);
+          } catch (e3) {}
         });
       }
     } catch (e1) {}
@@ -1219,6 +1767,17 @@ function resetAccumulationSoft(reason) {
           in_player = false;
           applyConfigAndState(true);
         });
+
+        // другие имена событий (в разных сборках/плеерах)
+        var _end_events = ['stop', 'end', 'close', 'exit', 'back'];
+        for (var i = 0; i < _end_events.length; i++) {
+          try {
+            Lampa.Player.listener.follow(_end_events[i], function () {
+              in_player = false;
+              applyConfigAndState(true);
+            });
+          } catch (e3) {}
+        }
       }
     } catch (e2) {}
   }
@@ -1231,8 +1790,37 @@ function resetAccumulationSoft(reason) {
     cfg_fps = cfg.fps;
     cfg_flakes = cfg.flakes;
 
+    // синхронизируем настройку \"Стряхивание\" (важно: если включили в настройках, когда оверлей открыт, эффект временно выключен и слушатель иначе не стартанёт)
+    try {
+      var sd = (!cfg_tizen && isMobileUA()) ? 1 : 0;
+      var shv = num(storageGet(KEY_SHAKE, sd), sd) ? 1 : 0;
+      setShakeEnabled(shv);
+    } catch (e0) {}
+
+    // размер снежинок
+    var prev_size_mult = cfg_size_mult;
+    cfg_size_mult = (typeof cfg.size_mult === 'number') ? cfg.size_mult : 1.0;
+    if (!cfg_size_mult || cfg_size_mult <= 0) cfg_size_mult = 1.0;
+
+    // скорость падения снежинок
+    var prev_fall_mult = cfg_fall_mult;
+    cfg_fall_mult = (typeof cfg.fall_mult === 'number') ? cfg.fall_mult : 1.0;
+    if (!cfg_fall_mult || cfg_fall_mult <= 0) cfg_fall_mult = 1.0;
+
+    // скорость оседания (интенсивность накопления)
+    cfg_settle_intensity = (typeof cfg.settle_intensity === 'number') ? cfg.settle_intensity : 1.0;
+    if (cfg_settle_intensity < 0) cfg_settle_intensity = 0;
+
     // settle: на tizen принудительно 0
-    cfg_settle = cfg_tizen ? 0 : (cfg.settle ? 1 : 0);
+    // В карточке (детали) оседание принудительно выключаем — иначе возможны артефакты
+    // (оседание на скрытые/невидимые карточки и элементы интерфейса).
+    var detailsNow = in_details_activity || isDetailsScreen();
+    var prev_settle_effective = cfg_settle;
+    cfg_settle_user = cfg_tizen ? 0 : (cfg.settle ? 1 : 0);
+    cfg_settle = (cfg_settle_user && !detailsNow) ? 1 : 0;
+    if (prev_settle_effective && !cfg_settle) {
+      clearAccumulationRuntime('settle_off');
+    }
 
     // тип снежинок
     var next_style = (cfg.flake_style | 0);
@@ -1241,6 +1829,9 @@ function resetAccumulationSoft(reason) {
     var style_changed = (cfg_flake_style !== next_style);
     cfg_flake_style = next_style;
 
+    // снег в карточке (детали)
+    cfg_in_card = cfg.in_card ? 1 : 0;
+
     // Предупреждение для Tizen при включении "Снежинки/Смешанные"
     if (cfg_tizen && (cfg_flake_style === 2 || cfg_flake_style === 3) && !window.__snowfx_tizen_flake_warned__) {
       window.__snowfx_tizen_flake_warned__ = 1;
@@ -1248,9 +1839,22 @@ function resetAccumulationSoft(reason) {
     }
     if (resetAcc) resetAccumulationHard('apply');
 
+    var size_changed = (Math.abs((prev_size_mult || 1) - (cfg_size_mult || 1)) > 0.001);
+    var fall_changed = (Math.abs((prev_fall_mult || 1) - (cfg_fall_mult || 1)) > 0.001);
+
     if (running) {
-      if (style_changed) {
+      if (style_changed || size_changed) {
         flakes = [];
+      } else if (fall_changed) {
+        // масштабируем текущую скорость падения без пересоздания снежинок
+        var prev = (prev_fall_mult || 1);
+        if (!prev || prev <= 0) prev = 1;
+        var ratio = (cfg_fall_mult || 1) / prev;
+        try {
+          for (var i = 0; i < flakes.length; i++) {
+            flakes[i].vy *= ratio;
+          }
+        } catch (e0) {}
       }
       applyFlakeCount(cfg_flakes);
       if (fallCanvas && fallCtx && accCanvas && accCtx) resize();
@@ -1265,7 +1869,11 @@ function resetAccumulationSoft(reason) {
   var last_density = null;
   var last_flake = null;
   var last_settle = null;
+  var last_size = null;
+  var last_settle_speed = null;
+  var last_fall_speed = null;
   var last_shake = null;
+  var last_in_card = null;
   var last_overlay = null;
 
   function startWatcher() {
@@ -1281,18 +1889,48 @@ function resetAccumulationSoft(reason) {
       var fl = num(storageGet(KEY_FLAKE, fd), fd) | 0;
       if (fl < 0) fl = 0;
       if (fl > 3) fl = 3;
-      if (tizen) fl = 1;
+      // На Tizen по умолчанию "Точки", но пользователь может выбрать "Снежинки/Смешанные" (с ограничениями)
+      if (tizen && fl === 0) fl = 1;
       var se = num(storageGet(KEY_SETTLE, settleDefault), settleDefault) | 0;
+
+      var sz = num(storageGet(KEY_SIZE, 0), 0) | 0;
+      if (sz < 0) sz = 0;
+      if (sz > 4) sz = 4;
+      if (tizen && sz >= 3) sz = 2;
+
+      var ss = num(storageGet(KEY_SETTLE_SPEED, 0), 0) | 0;
+      if (ss < 0) ss = 0;
+      if (ss > 3) ss = 3;
+
+      var fs = num(storageGet(KEY_FALL_SPEED, 0), 0) | 0;
+      if (fs < 0) fs = 0;
+      if (fs > 3) fs = 3;
+
       var sd = (!tizen && isMobileUA()) ? 1 : 0;
       var sh = num(storageGet(KEY_SHAKE, sd), sd) | 0;
+      var ic = num(storageGet(KEY_IN_CARD, 0), 0) | 0;
+      ic = ic ? 1 : 0;
       var ov = overlay_open ? 1 : 0;
 
-      if (en !== last_enabled || de !== last_density || fl !== last_flake || se !== last_settle || sh !== last_shake || ov !== last_overlay) {
+      // фоллбек: иногда после плеера флаг не сбрасывается (внешний/внутренний плеер)
+      var player_fix = 0;
+      if (in_player && !document.hidden) {
+        if (!detectActuallyInPlayer()) {
+          in_player = false;
+          player_fix = 1;
+        }
+      }
+
+      if (en !== last_enabled || de !== last_density || fl !== last_flake || se !== last_settle || sz !== last_size || ss !== last_settle_speed || fs !== last_fall_speed || sh !== last_shake || ic !== last_in_card || ov !== last_overlay || player_fix) {
         last_enabled = en;
         last_density = de;
         last_flake = fl;
         last_settle = se;
+        last_size = sz;
+        last_settle_speed = ss;
+        last_fall_speed = fs;
         last_shake = sh;
+        last_in_card = ic;
         last_overlay = ov;
         applyConfigAndState(true);
       }
@@ -1303,9 +1941,37 @@ function resetAccumulationSoft(reason) {
     try {
       document.addEventListener('visibilitychange', function () {
         overlay_open = detectOverlayOpen();
-        applyConfigAndState(false);
+
+        // при возврате из внешнего приложения/плеера иногда не приходит destroy
+        var need_reset = false;
+        if (!document.hidden) {
+          if (in_player && !detectActuallyInPlayer()) {
+            in_player = false;
+            need_reset = true;
+          }
+        }
+
+        applyConfigAndState(need_reset);
       }, false);
     } catch (e) {}
+  }
+
+  function bindResume() {
+    if (window.__snowfx_resume_bound__) return;
+    window.__snowfx_resume_bound__ = true;
+
+    var onResume = function () {
+      overlay_open = detectOverlayOpen();
+
+      // На resume/focus лучше принудительно пересоздавать канвасы
+      if (in_player && !detectActuallyInPlayer()) in_player = false;
+
+      applyConfigAndState(true);
+    };
+
+    try { window.addEventListener('focus', onResume, true); } catch (e1) {}
+    try { window.addEventListener('pageshow', onResume, true); } catch (e2) {}
+    try { document.addEventListener('resume', onResume, true); } catch (e3) {}
   }
 
   // --- bootstrap ---
@@ -1316,6 +1982,7 @@ function resetAccumulationSoft(reason) {
     addSettingsUI();
     bindLampaHooks();
     bindVisibility();
+    bindResume();
     bindScrollReset();
 
     if (!window.__snowfx_watcher_started__) {
