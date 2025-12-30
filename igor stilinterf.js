@@ -1,91 +1,1392 @@
-(function() {
-    'use strict';
+(function () {
+	"use strict";
+	Lampa.Platform.tv();
 
-    Lampa.Platform.tv();
+	if (typeof Lampa === "undefined") return;
 
-    function initPlugin() {
-        var categories = [
-            {
-                title: 'Дорамы',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><path fill="currentColor" d="M418.813 30.625c-21.178 26.27-49.712 50.982-84.125 70.844c-36.778 21.225-75.064 33.62-110.313 38.06a310 310 0 0 0 6.813 18.25c16.01.277 29.366-.434 36.406-1.5l9.47-1.53l8.436-1.28l.22 10.186a308 308 0 0 1-1.095 18.72l56.625 8.843q1.289-.145 2.563-.157c11.188-.114 21.44 7.29 24.468 18.593c.657 2.448.922 4.903.845 7.313c5.972-2.075 11.753-4.305 17.28-6.72l9.595-4.188l2.313 10.22a340 340 0 0 1 7.375 48.062C438.29 247.836 468.438 225.71 493 197.5c-3.22-36.73-16.154-78.04-39.125-117.813a291 291 0 0 0-2.22-3.78l-27.56 71.374c5.154.762 10.123 3.158 14.092 7.126c9.81 9.807 9.813 25.69 0 35.5c-9.812 9.81-25.722 9.807-35.53 0c-8.86-8.858-9.69-22.68-2.532-32.5l38.938-100.844a322 322 0 0 0-20.25-25.937zM51.842 118.72c-8.46 17.373-15.76 36.198-21.187 56.436c-14.108 52.617-13.96 103.682-2.812 143.438c13.3-2.605 26.442-3.96 39.312-4.03c1.855-.012 3.688.02 5.53.06c20.857.48 40.98 4.332 59.97 11.5a355 355 0 0 1-1.656-34.218c0-27.8 3.135-54.377 9-78.937l2.47-10.407l9.655 4.562c29.467 13.98 66.194 23.424 106.28 25.22c5.136-20.05 8.19-39.78 9.408-58.75c-35.198 4.83-75.387 2.766-116.407-8.22c-38.363-10.272-72.314-26.78-99.562-46.656zm230.594 82.218c-1.535 10.452-3.615 21.03-6.218 31.687a313 313 0 0 0 46-3.97a24.98 24.98 0 0 1-1.532-21.748zM105 201.375l4.156 18.22l-21.594 4.905c8.75 5.174 13.353 15.703 10.594 26c-3.32 12.394-16.045 19.758-28.437 16.438c-12.394-3.32-19.76-16.075-16.44-28.47a23.2 23.2 0 0 1 3.126-6.874l-21.062 4.78l-4.125-18.218l73.78-16.78zm388.594 22.813c-25.53 25.46-55.306 45.445-86.906 60.5c.05 2.397.093 4.8.093 7.218c0 9.188-.354 18.232-1.03 27.125c16.635 1.33 32.045-1.7 45.344-9.374c25.925-14.962 40.608-45.694 42.5-85.47zm-338.844 3c-4.03 19.993-6.33 41.31-6.406 63.593l.125-.342c30.568 10.174 62.622 17.572 95.25 21.375l7.5.875l.718 7.5l5.687 60.125l-18.625 1.75l-2.53-26.75a23.1 23.1 0 0 1-14.845.968c-12.393-3.32-19.76-16.042-16.438-28.436c.285-1.06.647-2.08 1.063-3.063a497 497 0 0 1-57.406-14.53c2.69 49.62 16.154 94.04 36.094 126.656c22.366 36.588 52.13 57.78 83.968 57.78c31.838.003 61.602-21.19 83.97-57.78c19.536-31.96 32.846-75.244 35.905-123.656a499 499 0 0 1-48.25 11.656c1.914 4.57 2.415 9.78 1.033 14.938c-3.322 12.394-16.045 19.758-28.438 16.437a23 23 0 0 1-2.125-.686l-2.5 26.47l-18.594-1.752l5.688-60.125l.72-7.5l7.498-.875c29.245-3.407 57.995-9.717 85.657-18.312v-1.594c0-21.573-2.27-42.23-6.064-61.75C351.132 242.653 313.092 250 272.312 250c-43.59 0-83.986-8.658-117.562-22.813zm-87.5 105.968c-10.87.102-21.995 1.22-33.375 3.313c12.695 31.62 33.117 53.07 59 60c16.9 4.523 34.896 2.536 52.813-5.25c-4.382-13.89-7.874-28.606-10.344-43.97c-21.115-9.623-43.934-14.32-68.094-14.094zm137.5 80.22h130.813c-40.082 44.594-92.623 42.844-130.813 0"/></svg>',
-                query: 'discover/tv?sort_by=first_air_date.desc&first_air_date.gte=2020-01-01&without_genres=16&with_original_language=ko&vote_average.gte=6&vote_average.lte=10&first_air_date.lte='
-            },
-            {
-                title: 'Турецкие сериалы',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><path fill="currentColor" d="M32 2C15.432 2 2 15.432 2 32s13.432 30 30 30s30-13.432 30-30S48.568 2 32 2m-3.117 15.25c4.381 0 8.311 1.955 10.984 5.049a11.53 11.53 0 0 0-6.638-2.099c-6.444 0-11.668 5.283-11.668 11.8s5.224 11.8 11.668 11.8c2.466 0 4.753-.775 6.638-2.097c-2.674 3.092-6.604 5.047-10.984 5.047C20.828 46.75 14.3 40.147 14.3 32s6.528-14.75 14.583-14.75M49.7 36.254l-5.263-1.638l-3.246 4.268l.012-5.267L35.934 32l5.27-1.617l-.012-5.266l3.246 4.267l5.263-1.638L46.436 32z"/></svg>',
-                query: 'discover/tv?sort_by=first_air_date.desc&first_air_date.gte=2020-01-01&without_genres=16&with_original_language=tr&vote_average.gte=6&vote_average.lte=10&first_air_date.lte='
-            },
-            {
-                title: 'Индийские фильмы',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M43.5 35.5v-23a4 4 0 0 0-4-4h-31a4 4 0 0 0-4 4v23a4 4 0 0 0 4 4h31a4 4 0 0 0 4-4" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M38.6 22.004v4m-2-2h4m-15.07 3.99v-8l4 8l4-7.98v7.99m-10.41-5.35a2.65 2.65 0 1 0-5.3 0v2.7a2.65 2.65 0 0 0 5.3.003v-.003h-2.65M7.4 27.994v-8l4 8l4-7.98v7.99" stroke-width="1.5"/></svg>',
-                query: 'discover/movie?sort_by=primary_release_date.desc&primary_release_date.gte=2020-01-01&without_genres=16&with_original_language=hi&vote_average.gte=6&vote_average.lte=10&first_air_date.lte='
-            },
-            {
-                title: 'HBO',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M20.57 17.735h-1.815l-3.34-9.203h1.633l2.02 5.987c.075.231.273.9.586 2.012l.297-.997l.33-1.006l2.094-6.004H24zm-5.344-.066a5.8 5.8 0 0 1-1.55.207c-1.23 0-1.84-.693-1.84-2.087V9.646h-1.063V8.532h1.121V7.081l1.476-.602v2.062h1.707v1.113H13.38v5.805c0 .446.074.75.214.932s.396.264.75.264c.207 0 .495-.041.883-.115zm-7.29-5.343c.017 1.764 1.55 2.358 1.567 2.366c-.017.042-.248.842-.808 1.658c-.487.71-.99 1.418-1.79 1.435c-.783.016-1.03-.462-1.93-.462c-.89 0-1.17.445-1.913.478c-.758.025-1.344-.775-1.838-1.484c-.998-1.451-1.765-4.098-.734-5.88c.51-.89 1.426-1.451 2.416-1.46c.75-.016 1.468.512 1.93.512s1.327-.627 2.234-.536c.38.016 1.452.157 2.136 1.154c-.058.033-1.278.743-1.27 2.219M6.468 7.988c.404-.495.685-1.18.61-1.864c-.585.025-1.294.388-1.723.883c-.38.437-.71 1.138-.619 1.806c.652.05 1.328-.338 1.732-.825"/></svg>',
-                query: 'discover/tv?sort_by=first_air_date.desc&first_air_date.gte=2020-01-01&vote_average.gte=6&vote_average.lte=10&first_air_date.lte=',
-                networks: '49'
-            },
-            {
-                title: 'Apple TV+',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M20.182 5.404a4 4 0 0 0 .625.05a1.1 1.1 0 0 0 .342-.03a.47.47 0 0 0 .404-.306a.6.6 0 0 0 .015-.276a.4.4 0 0 0-.243-.334a.9.9 0 0 0-.281-.064a.79.79 0 0 0-.833.499a1.4 1.4 0 0 0-.102.367c-.006.088-.006.088.073.094m-1.074-.4a1.81 1.81 0 0 1 1.633-1.359a2.4 2.4 0 0 1 1.057.102c.655.224 1.009.932.794 1.59a1 1 0 0 1-.489.588a2 2 0 0 1-.66.211a3.5 3.5 0 0 1-1.207-.016a1 1 0 0 0-.146-.023a.88.88 0 0 0 .716.954a2.6 2.6 0 0 0 .995 0c.154-.033.302-.065.456-.102s.218.012.218.17v.392a.24.24 0 0 1-.18.26a3 3 0 0 1-.626.17a3.3 3.3 0 0 1-1.214-.01a1.66 1.66 0 0 1-1.36-1.272a2.94 2.94 0 0 1 .016-1.656zm.317 6.367a2.6 2.6 0 0 1 1.012.039a1.94 1.94 0 0 1 1.41 1.635v.011h-.014v.1a.08.08 0 0 0 .024.08v-.021l.007.01v.61l-.012.021v-.01c-.03.02-.02.047-.02.08V14c-.048.9-.747 1.63-1.644 1.717a2.6 2.6 0 0 1-.998-.052a1.7 1.7 0 0 1-1.246-1.114a2.83 2.83 0 0 1 0-2.005c.219-.65.8-1.11 1.482-1.175zM12 3.946q0-.065.016-.127a.16.16 0 0 1 .147-.102h.67a.19.19 0 0 1 .184.147c.028.075.044.147.07.223c.053 0 .086-.036.122-.057a2.7 2.7 0 0 1 .946-.398a2 2 0 0 1 .795 0c.25.054.47.202.615.413l.03.038v.014c.132-.079.271-.164.415-.237a2.4 2.4 0 0 1 1.203-.266a1.06 1.06 0 0 1 1.095 1.027v2.964c0 .238-.03.27-.27.27h-.647a1 1 0 0 1-.126 0a.15.15 0 0 1-.128-.122a1 1 0 0 1-.01-.175V5.101a1 1 0 0 0-.033-.293a.4.4 0 0 0-.36-.294a1.86 1.86 0 0 0-.912.176a.09.09 0 0 0-.063.096v2.788a1 1 0 0 1-.01.155c0 .07-.058.127-.128.127h-.81c-.197 0-.24-.047-.24-.243V5.1a1.2 1.2 0 0 0-.026-.276a.4.4 0 0 0-.371-.318a1.9 1.9 0 0 0-.928.18a.085.085 0 0 0-.059.103v2.833c0 .195-.044.236-.239.236h-.704c-.188 0-.235-.053-.235-.232zm2.71 9.92a.2.2 0 0 0-.074-.011a2 2 0 0 0 .057.324c.08.337.358.59.7.636a2.7 2.7 0 0 0 1.088-.037a7 7 0 0 0 .345-.085c.154-.037.223.023.223.170v.385a.235.235 0 0 1-.19.271a3.4 3.4 0 0 1-1.141.217a3 3 0 0 1-.796-.079a1.63 1.63 0 0 1-1.215-1.136a2.95 2.95 0 0 1-.02-1.776a1.85 1.85 0 0 1 1.838-1.363a2.4 2.4 0 0 1 .792.101c.44.123.775.48.868.928a1.5 1.5 0 0 1 0 .587a.98.98 0 0 1-.535.704a2.2 2.2 0 0 1-.891.23a4.2 4.2 0 0 1-1.055-.067zm-3.133-2.202c.027-.037.012-.075.012-.112V9.847c0-.202.037-.238.238-.238h.734c.161.006.207.044.207.208v5.586c0 .147-.049.201-.196.201h-.69a.19.19 0 0 1-.186-.146a.8.8 0 0 0-.057-.185c-.048.008-.069.045-.107.067a1.71 1.71 0 0 1-1.615.276A1.53 1.53 0 0 1 9 14.804a2.5 2.5 0 0 1-.266-1.13a3 3 0 0 1 .187-1.225a1.66 1.66 0 0 1 .826-.945c.552-.263 1.2-.22 1.713.111a.3.3 0 0 0 .117.059zm-.797-3.817h-.733a.3.3 0 0 1-.075 0a.147.147 0 0 1-.147-.137V3.893c0-.127.054-.176.18-.18a20 20 0 0 1 .828 0c.122 0 .159.037.17.158v3.67a1 1 0 0 1-.01.176a.134.134 0 0 1-.128.12h-.089zm-1.045-5.45a.616.616 0 0 1 .642-.586h.064a.7.7 0 0 1 .248.036a.6.6 0 0 1 .411.67a.59.59 0 0 1-.506.534a1 1 0 0 1-.355 0a.587.587 0 0 1-.504-.660Zm-3.092 5.2V3.983c0-.244.026-.27.27-.27h.51a.21.21 0 0 1 .238.179c.037.132.07.264.1.408a.16.16 0 0 0 .091-.065a4 4 0 0 1 .303-.270a1.4 1.4 0 0 1 .964-.293c.138 0 .186.048.197.18c.01.18 0 .367 0 .546a1 1 0 0 1-.012.22a.147.147 0 0 1-.147.146a2 2 0 0 1-.22 0a2.5 2.5 0 0 0-1.027.147c-.074.026-.074.079-.074.138v2.678a.13.13 0 0 1-.128.122a1 1 0 0 1-.132 0v.01h-.69a1 1 0 0 1-.117 0a.15.15 0 0 1-.126-.132zm.904 3.228a.6.6 0 0 1-.192 0a1 1 0 0 1-.176-.02a.6.6 0 0 1-.466-.7a.587.587 0 0 1 .567-.536a.5.5 0 0 1 .111 0a.64.64 0 0 1 .313.054c.208.078.35.272.361.494a.624.624 0 0 1-.518.716zm.44.855v3.764a.147.147 0 0 1-.133.159h-.88a.147.147 0 0 1-.162-.128v-.026a1 1 0 0 1 0-.1v-3.67c0-.164.045-.21.21-.21h.751c.164.007.211.054.211.218zm-1.711.047l-.317.844l-1.067 2.774c-.01.032-.027.063-.037.095a.26.26 0 0 1-.265.175h-.702a.294.294 0 0 1-.318-.218c-.133-.349-.27-.704-.403-1.055c-.318-.832-.641-1.666-.96-2.504a1 1 0 0 1-.069-.207c-.016-.105.021-.158.128-.158h.901c.128 0 .185.085.218.196c.058.201.117.408.18.61c.217.733.43 1.479.646 2.217h.01l.096-.308l.733-2.46l.031-.095a.214.214 0 0 1 .213-.147h.812c.2-.003.243.054.176.245zM1.786 3.82a.38.38 0 0 1 .318-.107h.488a.21.21 0 0 1 .234.18q.013.08.037.160a.02.02 0 0 0 .02.015a.4.4 0 0 0 .11-.080a1.87 1.87 0 0 1 1.586-.354c.48.115.874.454 1.061.91a2.5 2.5 0 0 1 .205.798h-.008c.051.444.011.893-.118 1.321a1.94 1.94 0 0 1-.550.880c-.340.306-.795.448-1.248.388A1.8 1.8 0 0 1 3 7.564c-.039.033-.022.074-.022.113v1.506c0 .329 0 .329-.334.329h-.572a.29.29 0 0 1-.294-.126Zm19.37 15.225a.6.6 0 0 1-.176.2a11.6 11.6 0 0 1-1.962 1.247a15.5 15.5 0 0 1-4.152 1.406a18 18 0 0 1-2.51.270v.022h-.649v-.018c-.293-.014-.578-.026-.868-.047a15.4 15.4 0 0 1-2.296-.352a15.56 15.56 0 0 1-6.885-3.590c-.185-.164-.360-.333-.540-.503a.4.4 0 0 1-.101-.146a.195.195 0 0 1 .098-.256a.2.2 0 0 1 .147 0a1 1 0 0 1 .138.069a20.6 20.6 0 0 0 6.164 2.546a22 22 0 0 0 2.212.398a20.4 20.4 0 0 0 3.213.146a17 17 0 0 0 1.724-.146a21 21 0 0 0 3.935-.896a19 19 0 0 0 1.973-.776a.44.44 0 0 1 .318-.043a.33.33 0 0 1 .240.398l-.022.066zm1.028 1.488a3.6 3.6 0 0 1-.615.757a.4.4 0 0 1-.170.107a.123.123 0 0 1-.169-.124a.6.6 0 0 1 .038-.162c.185-.496.366-.990.510-1.504a5.4 5.4 0 0 0 .180-.859a1.7 1.7 0 0 0 0-.318a.41.41 0 0 0-.294-.388a2 2 0 0 0-.509-.095a8.4 8.4 0 0 0-1.459.064l-.641.080c-.070 0-.132 0-.170-.065a.18.18 0 0 1 .014-.190a.6.6 0 0 1 .162-.148a3.7 3.7 0 0 1 1.299-.562a6.4 6.4 0 0 1 1.097-.121q.520.002 1.028.121a1.5 1.5 0 0 1 .276.102c.121.050.206.162.219.293a2 2 0 0 1 .014.455a5.86 5.86 0 0 1-.806 2.55zm-2.55-5.72a1 1 0 0 0 .301.010a.7.7 0 0 0 .505-.293a1 1 0 0 0 .147-.308l-.009.014a1.9 1.9 0 0 0 .074-.678a3 3 0 0 0 0-.293a1.6 1.6 0 0 0-.147-.600a.69.69 0 0 0-.483-.376a.9.9 0 0 0-.302-.010a.7.7 0 0 0-.542.328a1.2 1.2 0 0 0-.147.350a2.9 2.9 0 0 0-.042.933a1.5 1.5 0 0 0 .147.525a.68.68 0 0 0 .497.397zm-3.523-1.96a.473.473 0 0 0-.394-.640c-.026 0-.047-.010-.073-.010a.8.8 0 0 0-.775.302a1.3 1.3 0 0 0-.211.578c-.015.047.010.069.058.073a5 5 0 0 0 .642.053q.165.009.328-.026a.465.465 0 0 0 .425-.330m-5.981-.255a1.2 1.2 0 0 0-.106.260a2.7 2.7 0 0 0-.065.997a1.5 1.5 0 0 0 .147.536a.73.73 0 0 0 .568.391a1.3 1.3 0 0 0 .832-.158a.15.15 0 0 0 .086-.147v-.966h.007c0-.323-.010-.641 0-.968a.15.15 0 0 0-.096-.156a1.6 1.6 0 0 0-.817-.147a.68.68 0 0 0-.556.358M3.855 7.051a.75.75 0 0 0 .488-.188a.8.8 0 0 0 .243-.425a2.7 2.7 0 0 0 .065-1.002a1.5 1.5 0 0 0-.135-.540a.65.65 0 0 0-.505-.382a1.44 1.44 0 0 0-.912.137a.16.16 0 0 0-.105.164v1.917a.15.15 0 0 0 .090.147a1.47 1.47 0 0 0 .771.170"/></svg>',
-                query: 'discover/tv?sort_by=first_air_date.desc&first_air_date.gte=2020-01-01&vote_average.gte=6&vote_average.lte=10&first_air_date.lte=',
-                networks: '2552'
-            },
-            {
-                title: 'Prime Video',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M20.57 17.735h-1.815l-3.34-9.203h1.633l2.02 5.987c.075.231.273.9.586 2.012l.297-.997l.33-1.006l2.094-6.004H24zm-5.344-.066a5.8 5.8 0 0 1-1.55.207c-1.23 0-1.84-.693-1.84-2.087V9.646h-1.063V8.532h1.121V7.081l1.476-.602v2.062h1.707v1.113H13.38v5.805c0 .446.074.75.214.932s.396.264.75.264c.207 0 .495-.041.883-.115zm-7.29-5.343c.017 1.764 1.55 2.358 1.567 2.366c-.017.042-.248.842-.808 1.658c-.487.71-.99 1.418-1.79 1.435c-.783.016-1.03-.462-1.93-.462c-.89 0-1.17.445-1.913.478c-.758.025-1.344-.775-1.838-1.484c-.998-1.451-1.765-4.098-.734-5.88c.51-.89 1.426-1.451 2.416-1.46c.75-.016 1.468.512 1.93.512s1.327-.627 2.234-.536c.38.016 1.452.157 2.136 1.154c-.058.033-1.278.743-1.27 2.219M6.468 7.988c.404-.495.685-1.18.61-1.864c-.585.025-1.294.388-1.723.883c-.38.437-.71 1.138-.619 1.806c.652.05 1.328-.338 1.732-.825"/></svg>',
-                query: 'discover/tv?sort_by=first_air_date.desc&first_air_date.gte=2020-01-01&vote_average.gte=6&vote_average.lte=10&first_air_date.lte=',
-                networks: '1024'
-            },
-            {
-                title: 'Netflix',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5.398 0v.006c3.028 8.556 5.37 15.175 8.348 23.596c2.344.058 4.85.398 4.854.398c-2.8-7.924-5.923-16.747-8.487-24zm8.489 0v9.63L18.6 22.951c-.043-7.86-.004-15.913.002-22.95zM5.398 1.05V24c1.873-.225 2.81-.312 4.715-.398v-9.22z"/></svg>',
-                query: 'discover/tv?sort_by=first_air_date.desc&first_air_date.gte=2020-01-01&vote_average.gte=6&vote_average.lte=10&first_air_date.lte=',
-                networks: '213'
-            },
-            {
-                title: 'MGM+',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M20.57 17.735h-1.815l-3.34-9.203h1.633l2.02 5.987c.075.231.273.9.586 2.012l.297-.997l.33-1.006l2.094-6.004H24zm-5.344-.066a5.8 5.8 0 0 1-1.55.207c-1.23 0-1.84-.693-1.84-2.087V9.646h-1.063V8.532h1.121V7.081l1.476-.602v2.062h1.707v1.113H13.38v5.805c0 .446.074.75.214.932s.396.264.75.264c.207 0 .495-.041.883-.115zm-7.29-5.343c.017 1.764 1.55 2.358 1.567 2.366c-.017.042-.248.842-.808 1.658c-.487.71-.99 1.418-1.79 1.435c-.783.016-1.03-.462-1.93-.462c-.89 0-1.17.445-1.913.478c-.758.025-1.344-.775-1.838-1.484c-.998-1.451-1.765-4.098-.734-5.88c.51-.89 1.426-1.451 2.416-1.46c.75-.016 1.468.512 1.93.512s1.327-.627 2.234-.536c.38.016 1.452.157 2.136 1.154c-.058.033-1.278.743-1.27 2.219M6.468 7.988c.404-.495.685-1.18.61-1.864c-.585.025-1.294.388-1.723.883c-.38.437-.71 1.138-.619 1.806c.652.05 1.328-.338 1.732-.825"/></svg>',
-                query: 'discover/tv?sort_by=first_air_date.desc&first_air_date.gte=2020-01-01&vote_average.gte=6&vote_average.lte=10&first_air_date.lte=',
-                networks: '6219'
-            }
-        ];
+	if (!Lampa.Maker || !Lampa.Maker.map || !Lampa.Utils) return;
+	if (window.plugin_interface_ready_v3) return;
 
-        var currentDate = new Date().toISOString().substr(0, 10);
-        var menuList = $('.menu .menu__list').eq(0);
+	window.plugin_interface_ready_v3 = true;
 
-        categories.forEach(function(category) {
-            var menuItem = $('<li class="menu__item selector" data-action="inter_' + category.title.replace(/\s+/g, '_') + '"><div class="menu__ico">' + category.icon + '</div><div class="menu__text">' + category.title + '</div></li>');
-            
-            menuItem.on('hover:enter', function() {
-                var params = {
-                    url: category.query + currentDate,
-                    title: category.title,
-                    component: 'category_full',
-                    source: 'tmdb',
-                    card_type: 'true',
-                    page: 1
-                };
+	addStyles();
+	initializeSettings();
 
-                if (category.networks) {
-                    params.networks = category.networks;
-                }
+	setupVoteColorsObserver();
+	setupVoteColorsForDetailPage();
 
-                Lampa.Activity.push(params);
-            });
-            
-            menuList.append(menuItem);
-        });
-    }
+	var mainMaker = Lampa.Maker.map("Main");
+	if (!mainMaker || !mainMaker.Items || !mainMaker.Create) return;
 
-    if (window.appready) {
-        initPlugin();
-    } else {
-        Lampa.Listener.follow('app', function(e) {
-            if (e.type === 'ready') {
-                initPlugin();
-            }
-        });
-    }
+	wrapMethod(mainMaker.Items, "onInit", function (originalMethod, args) {
+		if (originalMethod) originalMethod.apply(this, args);
+		this.__newInterfaceEnabled = shouldEnableInterface(this && this.object);
+	});
+
+	wrapMethod(mainMaker.Create, "onCreate", function (originalMethod, args) {
+		if (originalMethod) originalMethod.apply(this, args);
+		if (!this.__newInterfaceEnabled) return;
+
+		var state = getOrCreateState(this);
+		state.attach();
+	});
+
+	wrapMethod(mainMaker.Create, "onCreateAndAppend", function (originalMethod, args) {
+		var data = args && args[0];
+		if (this.__newInterfaceEnabled && data) {
+			extendResultsWithStyle(data);
+		}
+		return originalMethod ? originalMethod.apply(this, args) : undefined;
+	});
+
+	wrapMethod(mainMaker.Items, "onAppend", function (originalMethod, args) {
+		if (originalMethod) originalMethod.apply(this, args);
+		if (!this.__newInterfaceEnabled) return;
+
+		var element = args && args[0];
+		var data = args && args[1];
+		if (element && data) {
+			handleLineAppend(this, element, data);
+		}
+	});
+
+	wrapMethod(mainMaker.Items, "onDestroy", function (originalMethod, args) {
+		if (this.__newInterfaceState) {
+			this.__newInterfaceState.destroy();
+			delete this.__newInterfaceState;
+		}
+		delete this.__newInterfaceEnabled;
+		if (originalMethod) originalMethod.apply(this, args);
+	});
+
+	function shouldEnableInterface(object) {
+		if (!object) return false;
+		if (window.innerWidth < 767) return false;
+		if (Lampa.Platform.screen("mobile")) return false;
+		if (object.title === "Избранное") return false;
+		return true;
+	}
+
+	function getOrCreateState(createInstance) {
+		if (createInstance.__newInterfaceState) {
+			return createInstance.__newInterfaceState;
+		}
+		var state = createState(createInstance);
+		createInstance.__newInterfaceState = state;
+		return state;
+	}
+
+	function createState(mainInstance) {
+		var infoPanel = new InfoPanel();
+		infoPanel.create();
+
+		var backgroundWrapper = document.createElement("div");
+		backgroundWrapper.className = "full-start__background-wrapper";
+
+		var bg1 = document.createElement("img");
+		bg1.className = "full-start__background";
+		var bg2 = document.createElement("img");
+		bg2.className = "full-start__background";
+
+		backgroundWrapper.appendChild(bg1);
+		backgroundWrapper.appendChild(bg2);
+
+		var state = {
+			main: mainInstance,
+			info: infoPanel,
+			background: backgroundWrapper,
+			infoElement: null,
+			backgroundTimer: null,
+			backgroundLast: "",
+			attached: false,
+
+			attach: function () {
+				if (this.attached) return;
+
+				var container = mainInstance.render(true);
+				if (!container) return;
+
+				container.classList.add("new-interface");
+
+				if (!backgroundWrapper.parentElement) {
+					container.insertBefore(backgroundWrapper, container.firstChild || null);
+				}
+
+				var infoElement = infoPanel.render(true);
+				this.infoElement = infoElement;
+
+				if (infoElement && infoElement.parentNode !== container) {
+					if (backgroundWrapper.parentElement === container) {
+						container.insertBefore(infoElement, backgroundWrapper.nextSibling);
+					} else {
+						container.insertBefore(infoElement, container.firstChild || null);
+					}
+				}
+
+				mainInstance.scroll.minus(infoElement);
+				this.attached = true;
+			},
+
+			update: function (data) {
+				if (!data) return;
+				infoPanel.update(data);
+				this.updateBackground(data);
+			},
+
+			updateBackground: function (data) {
+				var show_bg = Lampa.Storage.get("show_background", true);
+				var backdropUrl = data && data.backdrop_path && show_bg ? Lampa.Api.img(data.backdrop_path, "original") : "";
+
+				if (backdropUrl === this.backgroundLast) return;
+
+				clearTimeout(this.backgroundTimer);
+				var self = this;
+
+				this.backgroundTimer = setTimeout(function () {
+					if (!backdropUrl) {
+						bg1.classList.remove("active");
+						bg2.classList.remove("active");
+						self.backgroundLast = "";
+						return;
+					}
+
+					var nextLayer = bg1.classList.contains("active") ? bg2 : bg1;
+					var prevLayer = bg1.classList.contains("active") ? bg1 : bg2;
+
+					var img = new Image();
+					img.onload = function () {
+						if (backdropUrl !== self.backgroundLast) return;
+
+						nextLayer.src = backdropUrl;
+						nextLayer.classList.add("active");
+
+						setTimeout(function () {
+							if (backdropUrl !== self.backgroundLast) return;
+							prevLayer.classList.remove("active");
+						}, 100);
+					};
+
+					self.backgroundLast = backdropUrl;
+					img.src = backdropUrl;
+				}, 100);
+			},
+
+			reset: function () {
+				infoPanel.empty();
+			},
+
+			destroy: function () {
+				clearTimeout(this.backgroundTimer);
+				infoPanel.destroy();
+
+				var container = mainInstance.render(true);
+				if (container) {
+					container.classList.remove("new-interface");
+				}
+
+				if (this.infoElement && this.infoElement.parentNode) {
+					this.infoElement.parentNode.removeChild(this.infoElement);
+				}
+
+				if (backgroundWrapper && backgroundWrapper.parentNode) {
+					backgroundWrapper.parentNode.removeChild(backgroundWrapper);
+				}
+
+				this.attached = false;
+			},
+		};
+
+		return state;
+	}
+
+	function extendResultsWithStyle(data) {
+		if (!data) return;
+
+		if (Array.isArray(data.results)) {
+			Lampa.Utils.extendItemsParams(data.results, {
+				style: {
+					name: Lampa.Storage.get("wide_post") !== false ? "wide" : "small",
+				},
+			});
+		}
+	}
+
+	function handleCard(state, card) {
+		if (!card || card.__newInterfaceCard) return;
+		if (typeof card.use !== "function" || !card.data) return;
+
+		card.__newInterfaceCard = true;
+		card.params = card.params || {};
+		card.params.style = card.params.style || {};
+
+		var targetStyle = Lampa.Storage.get("wide_post") !== false ? "wide" : "small";
+		card.params.style.name = targetStyle;
+
+		if (card.render && typeof card.render === "function") {
+			var element = card.render(true);
+			if (element) {
+				var node = element.jquery ? element[0] : element;
+				if (node && node.classList) {
+					if (targetStyle === "wide") {
+						node.classList.add("card--wide");
+						node.classList.remove("card--small");
+					} else {
+						node.classList.add("card--small");
+						node.classList.remove("card--wide");
+					}
+				}
+			}
+		}
+
+		card.use({
+			onFocus: function () {
+				state.update(card.data);
+			},
+			onHover: function () {
+				state.update(card.data);
+			},
+			onTouch: function () {
+				state.update(card.data);
+			},
+			onDestroy: function () {
+				delete card.__newInterfaceCard;
+			},
+		});
+	}
+
+	function getCardData(card, results, index) {
+		index = index || 0;
+
+		if (card && card.data) return card.data;
+		if (results && Array.isArray(results.results)) {
+			return results.results[index] || results.results[0];
+		}
+
+		return null;
+	}
+
+	function findCardData(element) {
+		if (!element) return null;
+
+		var node = element && element.jquery ? element[0] : element;
+
+		while (node && !node.card_data) {
+			node = node.parentNode;
+		}
+
+		return node && node.card_data ? node.card_data : null;
+	}
+
+	function getFocusedCard(items) {
+		var container = items && typeof items.render === "function" ? items.render(true) : null;
+		if (!container || !container.querySelector) return null;
+
+		var focusedElement = container.querySelector(".selector.focus") || container.querySelector(".focus");
+		return findCardData(focusedElement);
+	}
+
+	function handleLineAppend(items, line, data) {
+		if (line.__newInterfaceLine) return;
+		line.__newInterfaceLine = true;
+
+		var state = getOrCreateState(items);
+
+		var processCard = function (card) {
+			handleCard(state, card);
+		};
+
+		line.use({
+			onInstance: function (instance) {
+				processCard(instance);
+			},
+			onActive: function (card, results) {
+				var cardData = getCardData(card, results);
+				if (cardData) state.update(cardData);
+			},
+			onToggle: function () {
+				setTimeout(function () {
+					var focusedCard = getFocusedCard(line);
+					if (focusedCard) state.update(focusedCard);
+				}, 32);
+			},
+			onMore: function () {
+				state.reset();
+			},
+			onDestroy: function () {
+				state.reset();
+				delete line.__newInterfaceLine;
+			},
+		});
+
+		if (Array.isArray(line.items) && line.items.length) {
+			line.items.forEach(processCard);
+		}
+
+		if (line.last) {
+			var lastCardData = findCardData(line.last);
+			if (lastCardData) state.update(lastCardData);
+		}
+	}
+
+	function wrapMethod(object, methodName, wrapper) {
+		if (!object) return;
+
+		var originalMethod = typeof object[methodName] === "function" ? object[methodName] : null;
+
+		object[methodName] = function () {
+			var args = Array.prototype.slice.call(arguments);
+			return wrapper.call(this, originalMethod, args);
+		};
+	}
+
+	function addStyles() {
+		if (addStyles.added) return;
+		addStyles.added = true;
+
+		var styles = Lampa.Storage.get("wide_post") !== false ? getWideStyles() : getSmallStyles();
+
+		Lampa.Template.add("new_interface_style_v3", styles);
+		$("body").append(Lampa.Template.get("new_interface_style_v3", {}, true));
+	}
+
+	function getWideStyles() {
+		return `<style>
+					.items-line__title .full-person__photo {
+						width: 1.8em !important;
+						height: 1.8em !important;
+					}
+					.items-line__title .full-person--svg .full-person__photo {
+						padding: 0.5em !important;
+						margin-right: 0.5em !important;
+					}
+					.items-line__title .full-person__photo {
+						margin-right: 0.5em !important;
+					}
+					.items-line {
+						padding-bottom: 4em !important;
+					}
+					.new-interface-info__head, .new-interface-info__details{ opacity: 0; transition: opacity 0.5s ease; min-height: 2.2em !important;}
+					.new-interface-info__head.visible, .new-interface-info__details.visible{ opacity: 1; }
+					.new-interface .card.card--wide {
+						width: 18.3em;
+					}
+					.new-interface .card.card--small {
+						width: 18.3em;
+					}
+					.new-interface-info {
+						position: relative;
+						padding: 1.5em;
+						height: 27.5em;
+					}
+					.new-interface-info__body {
+						position: absolute;
+						z-index: 9999999;
+						width: 80%;
+						padding-top: 1.1em;
+					}
+					.new-interface-info__head {
+						color: rgba(255, 255, 255, 0.6);
+						font-size: 1.3em;
+						min-height: 1em;
+					}
+					.new-interface-info__head span {
+						color: #fff;
+					}
+					.new-interface-info__title {
+						font-size: 4em;
+						font-weight: 600;
+						margin-bottom: 0.3em;
+						overflow: hidden;
+						-o-text-overflow: '.';
+						text-overflow: '.';
+						display: -webkit-box;
+						-webkit-line-clamp: 1;
+						line-clamp: 1;
+						-webkit-box-orient: vertical;
+						margin-left: -0.03em;
+						line-height: 1.3;
+					}
+					.new-interface-info__details {
+						margin-bottom: 1.6em;
+						display: flex;
+						align-items: center;
+						flex-wrap: wrap;
+						min-height: 1.9em;
+						font-size: 1.3em;
+					}
+					.new-interface-info__split {
+						margin: 0 1em;
+						font-size: 0.7em;
+					}
+					.new-interface-info__description {
+						font-size: 1.4em;
+						font-weight: 310;
+						line-height: 1.3;
+						overflow: hidden;
+						-o-text-overflow: '.';
+						text-overflow: '.';
+						display: -webkit-box;
+						-webkit-line-clamp: 3;
+						line-clamp: 3;
+						-webkit-box-orient: vertical;
+						width: 65%;
+					}
+					.new-interface .card-more__box {
+						padding-bottom: 95%;
+					}
+					.new-interface .full-start__background-wrapper {
+						position: absolute;
+						top: 0;
+						left: 0;
+						width: 100%;
+						height: 100%;
+						z-index: -1;
+						pointer-events: none;
+					}
+					.new-interface .full-start__background {
+						position: absolute;
+						height: 108%;
+						width: 100%;
+						top: -5em;
+						left: 0;
+						opacity: 0;
+						object-fit: cover;
+						transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+					}
+					.new-interface .full-start__background.active {
+						opacity: 1;
+					}
+					.new-interface .full-start__rate {
+						font-size: 1.3em;
+						margin-right: 0;
+					}
+					.new-interface .card__promo {
+						display: none;
+					}
+					.new-interface .card.card--wide + .card-more .card-more__box {
+						padding-bottom: 95%;
+					}
+					.new-interface .card.card--wide .card-watched {
+						display: none !important;
+					}
+					body.light--version .new-interface-info__body {
+						position: absolute;
+						z-index: 9999999;
+						width: 69%;
+						padding-top: 1.5em;
+					}
+					body.light--version .new-interface-info {
+						height: 25.3em;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--wide.focus .card__view {
+						animation: animation-card-focus 0.2s;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--wide.animate-trigger-enter .card__view {
+						animation: animation-trigger-enter 0.2s forwards;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--small.focus .card__view {
+						animation: animation-card-focus 0.2s;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--small.animate-trigger-enter .card__view {
+						animation: animation-trigger-enter 0.2s forwards;
+					}
+					.logo-moved-head { transition: opacity 0.4s ease; }
+					.logo-moved-separator { transition: opacity 0.4s ease; }
+					.new-interface .card .card__age, .new-interface .card .card__title { display: none !important; }
+				</style>`;
+	}
+
+	function getSmallStyles() {
+		return `<style>
+					.new-interface-info__head, .new-interface-info__details{ opacity: 0; transition: opacity 0.5s ease; min-height: 2.2em !important;}
+					.new-interface-info__head.visible, .new-interface-info__details.visible{ opacity: 1; }
+					.new-interface .card.card--wide{
+						width: 18.3em;
+					}
+					.items-line__title .full-person__photo {
+						width: 1.8em !important;
+						height: 1.8em !important;
+					}
+					.items-line__title .full-person--svg .full-person__photo {
+						padding: 0.5em !important;
+						margin-right: 0.5em !important;
+					}
+					.items-line__title .full-person__photo {
+						margin-right: 0.5em !important;
+					}
+					.card .card__age,
+					.card .card__title {
+						display: none !important;
+					}
+					.new-interface-info {
+						position: relative;
+						padding: 1.5em;
+						height: 19.8em;
+					}
+					.new-interface-info__body {
+						position: absolute;
+						z-index: 9999999;
+						width: 80%;
+						padding-top: 0.2em;
+					}
+					.new-interface-info__head {
+						color: rgba(255, 255, 255, 0.6);
+						margin-bottom: 0.3em;
+						font-size: 1.2em;
+						min-height: 1em;
+					}
+					.new-interface-info__head span {
+						color: #fff;
+					}
+					.new-interface-info__title {
+						font-size: 3em;
+						font-weight: 600;
+						margin-bottom: 0.2em;
+						overflow: hidden;
+						-o-text-overflow: '.';
+						text-overflow: '.';
+						display: -webkit-box;
+						-webkit-line-clamp: 1;
+						line-clamp: 1;
+						-webkit-box-orient: vertical;
+						margin-left: -0.03em;
+						line-height: 1.3;
+					}
+					.new-interface-info__details {
+						margin-bottom: 1.6em;
+						display: flex;
+						align-items: center;
+						flex-wrap: wrap;
+						min-height: 1.9em;
+						font-size: 1.2em;
+					}
+					.new-interface-info__split {
+						margin: 0 1em;
+						font-size: 0.7em;
+					}
+					.new-interface-info__description {
+						font-size: 1.3em;
+						font-weight: 310;
+						line-height: 1.3;
+						overflow: hidden;
+						-o-text-overflow: '.';
+						text-overflow: '.';
+						display: -webkit-box;
+						-webkit-line-clamp: 2;
+						line-clamp: 2;
+						-webkit-box-orient: vertical;
+						width: 70%;
+					}
+					.new-interface .card-more__box {
+						padding-bottom: 150%;
+					}
+					.new-interface .full-start__background-wrapper {
+						position: absolute;
+						top: 0;
+						left: 0;
+						width: 100%;
+						height: 100%;
+						z-index: -1;
+						pointer-events: none;
+					}
+					.new-interface .full-start__background {
+						position: absolute;
+						height: 108%;
+						width: 100%;
+						top: -5em;
+						left: 0;
+						opacity: 0;
+						object-fit: cover;
+						transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+					}
+					.new-interface .full-start__background.active {
+						opacity: 1;
+					}
+					.new-interface .full-start__rate {
+						font-size: 1.2em;
+						margin-right: 0;
+					}
+					.new-interface .card__promo {
+						display: none;
+					}
+					.new-interface .card.card--wide + .card-more .card-more__box {
+						padding-bottom: 95%;
+					}
+					.new-interface .card.card--wide .card-watched {
+						display: none !important;
+					}
+					body.light--version .new-interface-info__body {
+						position: absolute;
+						z-index: 9999999;
+						width: 69%;
+						padding-top: 1.5em;
+					}
+					body.light--version .new-interface-info {
+						height: 25.3em;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--wide.focus .card__view {
+						animation: animation-card-focus 0.2s;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--wide.animate-trigger-enter .card__view {
+						animation: animation-trigger-enter 0.2s forwards;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--small.focus .card__view {
+						animation: animation-card-focus 0.2s;
+					}
+					body.advanced--animation:not(.no--animation) .new-interface .card.card--small.animate-trigger-enter .card__view {
+						animation: animation-trigger-enter 0.2s forwards;
+					}
+					.logo-moved-head { transition: opacity 0.4s ease; }
+					.logo-moved-separator { transition: opacity 0.4s ease; }
+					.new-interface .card .card__age, .new-interface .card .card__title { display: none !important; }
+				</style>`;
+	}
+
+	function InfoPanel() {
+		this.html = null;
+		this.timer = null;
+		this.fadeTimer = null;
+		this.network = new Lampa.Reguest();
+		this.loaded = {};
+		this.currentUrl = null;
+	}
+
+	InfoPanel.prototype.create = function () {
+		this.html = $(`<div class="new-interface-info">
+							<div class="new-interface-info__body">
+								<div class="new-interface-info__head"></div>
+								<div class="new-interface-info__title"></div>
+								<div class="new-interface-info__details"></div>
+								<div class="new-interface-info__description"></div>
+							</div>
+						</div>`);
+	};
+
+	InfoPanel.prototype.render = function (asElement) {
+		if (!this.html) this.create();
+		return asElement ? this.html[0] : this.html;
+	};
+
+	InfoPanel.prototype.update = function (data) {
+		if (!data || !this.html) return;
+
+		this.lastRenderId = Date.now();
+		var currentRenderId = this.lastRenderId;
+
+		this.html.find(".new-interface-info__head,.new-interface-info__details").removeClass("visible");
+
+		var title = this.html.find(".new-interface-info__title");
+		var desc = this.html.find(".new-interface-info__description");
+
+		desc.text(data.overview || Lampa.Lang.translate("full_notext"));
+
+		clearTimeout(this.fadeTimer);
+
+		Lampa.Background.change(Lampa.Api.img(data.backdrop_path, "original"));
+
+		this.load(data);
+
+		if (Lampa.Storage.get("logo_show", true)) {
+			title.text(data.title || data.name || "");
+			title.css({ opacity: 1 });
+			this.showLogo(data, currentRenderId);
+		} else {
+			title.text(data.title || data.name || "");
+			title.css({ opacity: 1 });
+		}
+	};
+
+	InfoPanel.prototype.showLogo = function (data, renderId) {
+		var _this = this;
+
+		var FADE_OUT_TEXT = 300;
+		var MORPH_HEIGHT = 400;
+		var FADE_IN_IMG = 400;
+		var TARGET_WIDTH = "7em";
+		var PADDING_TOP_EM = 0;
+		var PADDING_BOTTOM_EM = 0.2;
+
+		var title_elem = this.html.find(".new-interface-info__title");
+		var head_elem = this.html.find(".new-interface-info__head");
+		var details_elem = this.html.find(".new-interface-info__details");
+		var dom_title = title_elem[0];
+
+		function animateHeight(element, start, end, duration, callback) {
+			var startTime = null;
+			function step(timestamp) {
+				if (!startTime) startTime = timestamp;
+				var progress = timestamp - startTime;
+				var percent = Math.min(progress / duration, 1);
+				var ease = 1 - Math.pow(1 - percent, 3);
+				element.style.height = start + (end - start) * ease + "px";
+				if (progress < duration) {
+					requestAnimationFrame(step);
+				} else {
+					if (callback) callback();
+				}
+			}
+			requestAnimationFrame(step);
+		}
+
+		function animateOpacity(element, start, end, duration, callback) {
+			var startTime = null;
+			function step(timestamp) {
+				if (!startTime) startTime = timestamp;
+				var progress = timestamp - startTime;
+				var percent = Math.min(progress / duration, 1);
+				var ease = 1 - Math.pow(1 - percent, 3);
+				element.style.opacity = start + (end - start) * ease;
+				if (progress < duration) {
+					requestAnimationFrame(step);
+				} else {
+					if (callback) callback();
+				}
+			}
+			requestAnimationFrame(step);
+		}
+
+		function applyFinalStyles(img, text_height) {
+			img.style.marginTop = "0";
+			img.style.marginLeft = "0";
+			img.style.paddingTop = PADDING_TOP_EM + "em";
+			img.style.paddingBottom = PADDING_BOTTOM_EM + "em";
+
+			img.style.imageRendering = "-webkit-optimize-contrast";
+
+			if (text_height) {
+				img.style.height = text_height + "px";
+				img.style.width = "auto";
+				img.style.maxWidth = "100%";
+				img.style.maxHeight = "none";
+			} else if (window.innerWidth < 768) {
+				img.style.width = "100%";
+				img.style.height = "auto";
+				img.style.maxWidth = "100%";
+				img.style.maxHeight = "none";
+			} else {
+				img.style.width = TARGET_WIDTH;
+				img.style.height = "auto";
+				img.style.maxHeight = "none";
+				img.style.maxWidth = "100%";
+			}
+
+			img.style.boxSizing = "border-box";
+			img.style.display = "block";
+			img.style.objectFit = "contain";
+			img.style.objectPosition = "left bottom";
+			img.style.transition = "none";
+		}
+
+		function moveHeadToDetails(animate) {
+			if (!head_elem.length || !details_elem.length) return;
+			if (details_elem.find(".logo-moved-head").length > 0) return;
+
+			var content = head_elem.html();
+			if (!content || content.trim() === "") return;
+
+			var new_item = $('<span class="logo-moved-head">' + content + "</span>");
+			var separator = $('<span class="new-interface-info__split logo-moved-separator">●</span>');
+
+			if (animate) {
+				new_item.css({ opacity: 0, transition: "none" });
+				separator.css({ opacity: 0, transition: "none" });
+			}
+
+			if (details_elem.children().length > 0) details_elem.append(separator);
+			details_elem.append(new_item);
+
+			if (animate) {
+				head_elem.css({
+					transition: "opacity " + FADE_OUT_TEXT / 1000 + "s ease",
+					opacity: "0",
+				});
+
+				setTimeout(function () {
+					new_item.css({ transition: "opacity " + FADE_IN_IMG / 1000 + "s ease", opacity: "1" });
+					separator.css({ transition: "opacity " + FADE_IN_IMG / 1000 + "s ease", opacity: "1" });
+				}, FADE_OUT_TEXT);
+			} else {
+				head_elem.css({ opacity: "0", transition: "none" });
+			}
+		}
+
+		function startLogoAnimation(img_url, fromCache) {
+			if (renderId && renderId !== _this.lastRenderId) return;
+
+			var img = new Image();
+			img.src = img_url;
+
+			var start_text_height = 0;
+			if (dom_title) start_text_height = dom_title.getBoundingClientRect().height;
+
+			if (fromCache) {
+				if (dom_title) start_text_height = dom_title.getBoundingClientRect().height;
+
+				moveHeadToDetails(false);
+				applyFinalStyles(img, start_text_height);
+
+				title_elem.empty().append(img);
+				title_elem.css({ opacity: "1", transition: "none" });
+
+				if (dom_title) {
+					dom_title.style.display = "block";
+					dom_title.style.height = "";
+					dom_title.style.transition = "none";
+				}
+				img.style.opacity = "1";
+				return;
+			}
+
+			applyFinalStyles(img, start_text_height);
+			img.style.opacity = "0";
+
+			img.onload = function () {
+				if (renderId && renderId !== _this.lastRenderId) return;
+
+				setTimeout(function () {
+					if (renderId && renderId !== _this.lastRenderId) return;
+
+					if (dom_title) start_text_height = dom_title.getBoundingClientRect().height;
+
+					moveHeadToDetails(true);
+
+					title_elem.css({
+						transition: "opacity " + FADE_OUT_TEXT / 1000 + "s ease",
+						opacity: "0",
+					});
+
+					setTimeout(function () {
+						if (renderId && renderId !== _this.lastRenderId) return;
+
+						title_elem.empty();
+						title_elem.append(img);
+						title_elem.css({ opacity: "1", transition: "none" });
+
+						var target_container_height = dom_title.getBoundingClientRect().height;
+
+						dom_title.style.height = start_text_height + "px";
+						dom_title.style.display = "block";
+						dom_title.style.overflow = "hidden";
+						dom_title.style.boxSizing = "border-box";
+
+						void dom_title.offsetHeight;
+
+						dom_title.style.transition = "height " + MORPH_HEIGHT / 1000 + "s cubic-bezier(0.4, 0, 0.2, 1)";
+
+						requestAnimationFrame(function () {
+							if (renderId && renderId !== _this.lastRenderId) return;
+							dom_title.style.height = target_container_height + "px";
+
+							setTimeout(
+								function () {
+									if (renderId && renderId !== _this.lastRenderId) return;
+									img.style.transition = "opacity " + FADE_IN_IMG / 1000 + "s ease";
+									img.style.opacity = "1";
+								},
+								Math.max(0, MORPH_HEIGHT - 100),
+							);
+
+							setTimeout(
+								function () {
+									if (renderId && renderId !== _this.lastRenderId) return;
+									applyFinalStyles(img, start_text_height);
+									dom_title.style.height = "";
+								},
+								MORPH_HEIGHT + FADE_IN_IMG + 50,
+							);
+						});
+					}, FADE_OUT_TEXT);
+				}, 200);
+			};
+
+			img.onerror = function () {
+				title_elem.css({ opacity: "1", transition: "none" });
+			};
+		}
+
+		if (data.id) {
+			var type = data.name ? "tv" : "movie";
+			var language = Lampa.Storage.get("language");
+			var cache_key = "logo_cache_v2_" + type + "_" + data.id + "_" + language;
+			var cached_url = Lampa.Storage.get(cache_key);
+
+			if (cached_url && cached_url !== "none") {
+				var img_cache = new Image();
+				img_cache.src = cached_url;
+
+				if (img_cache.complete) {
+					startLogoAnimation(cached_url, true);
+				} else {
+					startLogoAnimation(cached_url, false);
+				}
+			} else {
+				var url = Lampa.TMDB.api(type + "/" + data.id + "/images?api_key=" + Lampa.TMDB.key() + "&include_image_language=" + language + ",en,null");
+
+				$.get(url, function (data_api) {
+					if (renderId && renderId !== _this.lastRenderId) return;
+
+					var final_logo = null;
+					if (data_api.logos && data_api.logos.length > 0) {
+						for (var i = 0; i < data_api.logos.length; i++) {
+							if (data_api.logos[i].iso_639_1 == language) {
+								final_logo = data_api.logos[i].file_path;
+								break;
+							}
+						}
+						if (!final_logo) {
+							for (var j = 0; j < data_api.logos.length; j++) {
+								if (data_api.logos[j].iso_639_1 == "en") {
+									final_logo = data_api.logos[j].file_path;
+									break;
+								}
+							}
+						}
+						if (!final_logo) final_logo = data_api.logos[0].file_path;
+					}
+
+					if (final_logo) {
+						var img_url = Lampa.TMDB.image("/t/p/original" + final_logo.replace(".svg", ".png"));
+						Lampa.Storage.set(cache_key, img_url);
+						startLogoAnimation(img_url, false);
+					} else {
+						Lampa.Storage.set(cache_key, "none");
+					}
+				}).fail(function () {});
+			}
+		}
+	};
+
+	InfoPanel.prototype.load = function (data) {
+		if (!data || !data.id) return;
+
+		var source = data.source || "tmdb";
+		if (source !== "tmdb" && source !== "cub") return;
+
+		if (!Lampa.TMDB || typeof Lampa.TMDB.api !== "function" || typeof Lampa.TMDB.key !== "function") return;
+
+		var mediaType = data.media_type === "tv" || data.name ? "tv" : "movie";
+		var language = Lampa.Storage.get("language");
+		var apiUrl = Lampa.TMDB.api(mediaType + "/" + data.id + "?api_key=" + Lampa.TMDB.key() + "&append_to_response=content_ratings,release_dates&language=" + language);
+
+		this.currentUrl = apiUrl;
+
+		if (this.loaded[apiUrl]) {
+			this.draw(this.loaded[apiUrl]);
+			return;
+		}
+
+		clearTimeout(this.timer);
+		var self = this;
+
+		this.timer = setTimeout(function () {
+			self.network.clear();
+			self.network.timeout(5000);
+			self.network.silent(apiUrl, function (response) {
+				self.loaded[apiUrl] = response;
+				if (self.currentUrl === apiUrl) {
+					self.draw(response);
+				}
+			});
+		}, 300);
+	};
+
+	InfoPanel.prototype.draw = function (data) {
+		if (!data || !this.html) return;
+
+		var year = ((data.release_date || data.first_air_date || "0000") + "").slice(0, 4);
+
+		var rating = parseFloat((data.vote_average || 0) + "").toFixed(1);
+
+		var headInfo = [];
+		var detailsInfo = [];
+
+		var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+		if (countries.length > 2) countries = countries.slice(0, 2);
+
+		var ageRating = Lampa.Api.sources.tmdb.parsePG(data);
+
+		var show_logo = Lampa.Storage.get("logo_show", true);
+
+		if (Lampa.Storage.get("rat") !== false) {
+			if (rating > 0) {
+				var rate_style = "";
+
+				if (Lampa.Storage.get("colored_ratings")) {
+					var vote_num = parseFloat(rating);
+					var color = "";
+
+					if (vote_num >= 0 && vote_num <= 3) {
+						color = "red";
+					} else if (vote_num > 3 && vote_num < 6) {
+						color = "orange";
+					} else if (vote_num >= 6 && vote_num < 7) {
+						color = "cornflowerblue";
+					} else if (vote_num >= 7 && vote_num < 8) {
+						color = "darkmagenta";
+					} else if (vote_num >= 8 && vote_num <= 10) {
+						color = "lawngreen";
+					}
+
+					if (color) rate_style = ' style="color: ' + color + '"';
+				}
+
+				detailsInfo.push('<div class="full-start__rate"' + rate_style + "><div>" + rating + "</div><div>TMDB</div></div>");
+			}
+		}
+
+		if (Lampa.Storage.get("ganr") !== false) {
+			if (data.genres && data.genres.length > 0) {
+				detailsInfo.push(
+					data.genres
+						.slice(0, 2)
+						.map(function (genre) {
+							return Lampa.Utils.capitalizeFirstLetter(genre.name);
+						})
+						.join(" | "),
+				);
+			}
+		}
+
+		if (Lampa.Storage.get("vremya") !== false) {
+			if (data.runtime) {
+				detailsInfo.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+			}
+		}
+
+		if (Lampa.Storage.get("seas") !== false && data.number_of_seasons) {
+			detailsInfo.push('<span class="full-start__pg" style="font-size: 0.9em;">Сезонов ' + data.number_of_seasons + "</span>");
+		}
+
+		if (Lampa.Storage.get("eps") !== false && data.number_of_episodes) {
+			detailsInfo.push('<span class="full-start__pg" style="font-size: 0.9em;">Эпизодов ' + data.number_of_episodes + "</span>");
+		}
+
+		if (Lampa.Storage.get("year_ogr") !== false) {
+			if (ageRating) {
+				detailsInfo.push('<span class="full-start__pg" style="font-size: 0.9em;">' + ageRating + "</span>");
+			}
+		}
+
+		if (Lampa.Storage.get("status") !== false) {
+			var statusText = "";
+
+			if (data.status) {
+				switch (data.status.toLowerCase()) {
+					case "released":
+						statusText = "Выпущенный";
+						break;
+					case "ended":
+						statusText = "Закончен";
+						break;
+					case "returning series":
+						statusText = "Онгоинг";
+						break;
+					case "canceled":
+						statusText = "Отменено";
+						break;
+					case "post production":
+						statusText = "Скоро";
+						break;
+					case "planned":
+						statusText = "Запланировано";
+						break;
+					case "in production":
+						statusText = "В производстве";
+						break;
+					default:
+						statusText = data.status;
+						break;
+				}
+			}
+
+			if (statusText) {
+				detailsInfo.push('<span class="full-start__status" style="font-size: 0.9em;">' + statusText + "</span>");
+			}
+		}
+
+		var yc = [];
+		if (year !== "0000") yc.push("<span>" + year + "</span>");
+		if (countries.length > 0) yc.push(countries.join(", "));
+
+		if (yc.length > 0) {
+			detailsInfo.push(yc.join(", "));
+		}
+
+		this.html
+			.find(".new-interface-info__head")
+			.empty()
+			.append(headInfo.join(", "))
+			.toggleClass("visible", headInfo.length > 0);
+		this.html.find(".new-interface-info__details").html(detailsInfo.join('<span class="new-interface-info__split">&#9679;</span>')).addClass("visible");
+	};
+
+	InfoPanel.prototype.empty = function () {
+		if (!this.html) return;
+		this.html.find(".new-interface-info__head,.new-interface-info__details").text("").removeClass("visible");
+	};
+
+	InfoPanel.prototype.destroy = function () {
+		clearTimeout(this.fadeTimer);
+		clearTimeout(this.timer);
+		this.network.clear();
+		this.loaded = {};
+		this.currentUrl = null;
+
+		if (this.html) {
+			this.html.remove();
+			this.html = null;
+		}
+	};
+
+	function updateVoteColors() {
+		if (!Lampa.Storage.get("colored_ratings")) return;
+
+		function applyColorByRating(element) {
+			var $el = $(element);
+			var voteText = $el.text().trim();
+
+			if (/^\d+(\.\d+)?K$/.test(voteText)) {
+				return;
+			}
+
+			var match = voteText.match(/(\d+(\.\d+)?)/);
+			if (!match) return;
+
+			var vote = parseFloat(match[0]);
+			if (isNaN(vote)) return;
+
+			var color = "";
+
+			if (vote >= 0 && vote <= 3) {
+				color = "red";
+			} else if (vote > 3 && vote < 6) {
+				color = "orange";
+			} else if (vote >= 6 && vote < 7) {
+				color = "cornflowerblue";
+			} else if (vote >= 7 && vote < 8) {
+				color = "darkmagenta";
+			} else if (vote >= 8 && vote <= 10) {
+				color = "lawngreen";
+			}
+
+			if (color) {
+				$el.css("color", color);
+			}
+		}
+
+		$(".card__vote").each(function () {
+			applyColorByRating(this);
+		});
+
+		$(".full-start__rate, .full-start-new__rate").each(function () {
+			applyColorByRating(this);
+		});
+
+		$(".info__rate, .card__imdb-rate, .card__kinopoisk-rate").each(function () {
+			applyColorByRating(this);
+		});
+	}
+
+	function setupVoteColorsObserver() {
+		setTimeout(updateVoteColors, 300);
+
+		var observer = new MutationObserver(function () {
+			setTimeout(updateVoteColors, 100);
+		});
+
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true,
+		});
+	}
+
+	function setupVoteColorsForDetailPage() {
+		if (!window.Lampa || !Lampa.Listener) return;
+
+		Lampa.Listener.follow("full", function (data) {
+			if (data.type === "complite") {
+				setTimeout(updateVoteColors, 100);
+			}
+		});
+	}
+
+	function initializeSettings() {
+		Lampa.Settings.listener.follow("open", function (event) {
+			if (event.name == "main") {
+				if (Lampa.Settings.main().render().find('[data-component="style_interface"]').length == 0) {
+					Lampa.SettingsApi.addComponent({
+						component: "style_interface",
+						name: "Стильный интерфейс",
+					});
+				}
+
+				Lampa.Settings.main().update();
+				Lampa.Settings.main().render().find('[data-component="style_interface"]').addClass("hide");
+			}
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "interface",
+			param: {
+				name: "style_interface",
+				type: "static",
+				default: true,
+			},
+			field: {
+				name: "Стильный интерфейс",
+				description: "Настройки элементов",
+			},
+			onRender: function (item) {
+				setTimeout(function () {
+					$('.settings-param > div:contains("Стильный интерфейс")').parent().insertAfter($('div[data-name="interface_size"]'));
+				}, 20);
+
+				item.on("hover:enter", function () {
+					Lampa.Settings.create("style_interface");
+					Lampa.Controller.enabled().controller.back = function () {
+						Lampa.Settings.create("interface");
+					};
+				});
+			},
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "logo_show", type: "trigger", default: true },
+			field: { name: "Показывать логотип вместо названия" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "show_background", type: "trigger", default: true },
+			field: { name: "Отображать постеры на фоне" },
+			onChange: function (value) {
+				if (!value) {
+					$(".full-start__background").removeClass("active");
+				}
+			},
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "status", type: "trigger", default: true },
+			field: { name: "Показывать статус фильма/сериала" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "seas", type: "trigger", default: false },
+			field: { name: "Показывать количество сезонов" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "eps", type: "trigger", default: false },
+			field: { name: "Показывать количество эпизодов" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "year_ogr", type: "trigger", default: true },
+			field: { name: "Показывать возрастное ограничение" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "vremya", type: "trigger", default: true },
+			field: { name: "Показывать время фильма" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "ganr", type: "trigger", default: true },
+			field: { name: "Показывать жанр фильма" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "rat", type: "trigger", default: true },
+			field: { name: "Показывать рейтинг фильма" },
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "colored_ratings", type: "trigger", default: true },
+			field: { name: "Цветные рейтинги" },
+			onChange: function (value) {
+				if (value) {
+					updateVoteColors();
+				} else {
+					$(".card__vote, .full-start__rate, .full-start-new__rate, .info__rate, .card__imdb-rate, .card__kinopoisk-rate").css("color", "");
+				}
+			},
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "wide_post", type: "trigger", default: true },
+			field: { name: "Широкие постеры", description: "Лампа будет перезагружена" },
+			onChange: function () {
+				window.location.reload();
+			},
+		});
+
+		Lampa.SettingsApi.addParam({
+			component: "style_interface",
+			param: { name: "int_clear_logo_cache", type: "static" },
+			field: { name: "Очистить кеш логотипов", description: "Лампа будет перезагружена" },
+			onRender: function (item) {
+				item.on("hover:enter", function () {
+					Lampa.Select.show({
+						title: "Очистить кеш логотипов?",
+						items: [{ title: "Да", confirm: true }, { title: "Нет" }],
+						onSelect: function (a) {
+							if (a.confirm) {
+								var keys = [];
+								for (var i = 0; i < localStorage.length; i++) {
+									var key = localStorage.key(i);
+									if (key.indexOf("logo_cache_v2_") !== -1) {
+										keys.push(key);
+									}
+								}
+								keys.forEach(function (key) {
+									localStorage.removeItem(key);
+								});
+								window.location.reload();
+							} else {
+								Lampa.Controller.toggle("settings_component");
+							}
+						},
+						onBack: function () {
+							Lampa.Controller.toggle("settings_component");
+						},
+					});
+				});
+			},
+		});
+
+		var initInterval = setInterval(function () {
+			if (typeof Lampa !== "undefined") {
+				clearInterval(initInterval);
+				if (!Lampa.Storage.get("int_plug", "false")) {
+					setDefaultSettings();
+				}
+			}
+		}, 200);
+
+		function setDefaultSettings() {
+			Lampa.Storage.set("int_plug", "true");
+			Lampa.Storage.set("wide_post", "true");
+			Lampa.Storage.set("logo_show", "true");
+			Lampa.Storage.set("show_background", "true");
+			Lampa.Storage.set("status", "true");
+			Lampa.Storage.set("seas", "false");
+			Lampa.Storage.set("eps", "false");
+			Lampa.Storage.set("year_ogr", "true");
+			Lampa.Storage.set("vremya", "true");
+			Lampa.Storage.set("ganr", "true");
+			Lampa.Storage.set("rat", "true");
+			Lampa.Storage.set("colored_ratings", "true");
+		}
+	}
 })();
