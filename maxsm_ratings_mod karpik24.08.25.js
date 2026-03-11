@@ -469,7 +469,7 @@
     var KP_API_KEYS = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.KP_API_KEYS) || ['cc0875d7-b351-46bb-b97f-56787d2ea25d']; // api ключи массивом
     var PROXY_TIMEOUT = 5000; // Таймаут прокси
     var JACRED_PROTOCOL = 'http://'; // Протокол JacRed
-    var JACRED_URL = Lampa.Storage.get('jacred.xyz') || 'jacred.xyz'; // Адрес JacRed
+    var JACRED_URL = Lampa.Storage.get('jr.maxvol.pro') || 'jr.maxvol.pro'; // Адрес JacRed
     var JACRED_API_KEY = Lampa.Storage.get(''); // api ключ JacRed
     var PROXY_LIST = [
         'http://api.allorigins.win/raw?url=',
@@ -2351,5 +2351,6 @@
 	if (!window.maxsmRatingsPlugin)
         startPlugin();
 })();
+
 
 
