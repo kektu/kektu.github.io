@@ -11,7 +11,7 @@
 Для получения данных о качестве используется jacred парсер, по умолчанию плагин настроен на получение адреса и ключа вашего введеного jacred,
 вы можете изменить это в переменных:
     var JACRED_PROTOCOL = 'https://'; // Протокол JacRed
-    var JACRED_URL = Lampa.Storage.get('jackett_url'); // Адрес JacRed для получения информации о карточках без протокола (jr.maxvol.pro)
+    var JACRED_URL = Lampa.Storage.get('jackett_url'); // Адрес JacRed для получения информации о карточках без протокола (http://jr.maxvol.pro)
     var JACRED_API_KEY = Lampa.Storage.get('jackett_key'); // api ключ JacRed
 
 */
@@ -469,7 +469,7 @@
     var KP_API_KEYS = (window.RATINGS_PLUGIN_TOKENS && window.RATINGS_PLUGIN_TOKENS.KP_API_KEYS) || ['cc0875d7-b351-46bb-b97f-56787d2ea25d']; // api ключи массивом
     var PROXY_TIMEOUT = 5000; // Таймаут прокси
     var JACRED_PROTOCOL = 'http://'; // Протокол JacRed
-    var JACRED_URL = Lampa.Storage.get('jr.maxvol.pro') || 'jr.maxvol.pro'; // Адрес JacRed
+    var JACRED_URL = Lampa.Storage.get('http://jr.maxvol.pro') || 'http://jr.maxvol.pro'; // Адрес JacRed
     var JACRED_API_KEY = Lampa.Storage.get(''); // api ключ JacRed
     var PROXY_LIST = [
         'http://api.allorigins.win/raw?url=',
@@ -2351,6 +2351,7 @@
 	if (!window.maxsmRatingsPlugin)
         startPlugin();
 })();
+
 
 
 
