@@ -12,7 +12,7 @@
     Вы можете изменить эти значения, отредактировав переменные ниже.
 */
     let JACRED_PROTOCOL = 'https://'; // Протокол JacRed
-    let JACRED_URL = (window.Lampa && Lampa.Storage) ? Lampa.Storage.get('jackett_url') : ''; // Адрес JacRed для получения информации о карточках без протокола (jacred.xyz)
+    let JACRED_URL = (window.Lampa && Lampa.Storage) ? Lampa.Storage.get('jackett_url') : ''; // Адрес JacRed для получения информации о карточках без протокола (jr.maxvol.pro)
     let JACRED_API_KEY = (window.Lampa && Lampa.Storage) ? Lampa.Storage.get('jackett_key') : ''; // api ключ JacRed
 
 (function() {
